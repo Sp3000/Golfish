@@ -3,7 +3,7 @@ Golfish, the 2D golf-ish language based on ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.2.2 (updated 28 Feb 2015)
+Version: 0.2.3 (updated 28 Feb 2015)
 """
 
 from collections import defaultdict, namedtuple
@@ -79,6 +79,9 @@ class Interpreter():
         self._bookmark_pos = [-1, 0] # tT
         self._bookmark_dir = DIRECTIONS[">"]
 
+        self._variable_map = {}
+        self._set_variable = False
+
     def tick(self):
         self.move()
 
@@ -110,6 +113,18 @@ class Interpreter():
 
     def handle_instruction(self, char):
         instruction = chr(char)
+
+        if instruction in self._variable_map:
+            self.push(self._variable_map[instruction])
+            return
+
+        if self._set_variable == True:
+            elem = self.pop()
+            self._variable_map[instruction] = deepcopy(elem)
+            self.push(elem)
+            
+            self._set_variable = False
+            return
 
         if self._char_parse:
             if self._escape:
@@ -375,10 +390,9 @@ class Interpreter():
         elif instruction == "C":
             elem = self.pop()
 
-            if self.is_num(elem):
-                if elem >= 0:
-                    self.push(elem)
-                    self._skip = 1
+            if not self.is_num(elem) or elem >= 0:
+                self.push(elem)
+                self._skip = 1
 
         elif instruction == "G":
             elem = self.pop()
@@ -425,7 +439,22 @@ class Interpreter():
                 popped.reverse()
 
                 self._curr_stack.extend(popped)
-                self._curr_stack.extend(deepcopy(popped))   
+                self._curr_stack.extend(deepcopy(popped))
+
+        elif instruction == "L":
+            char = self.read_char()
+
+            if char == -1:
+                self.push(char)
+
+            else:
+                line = []
+
+                while char not in [-1, 10, 13]:
+                    line.append(char)
+                    char = self.read_char()
+
+                self.push(line)                
 
         elif instruction == "M":
             elem = self.pop()
@@ -456,6 +485,9 @@ class Interpreter():
         elif instruction == "T":
             self._bookmark_pos = self._pos[:]
             self._bookmark_dir = self._dir
+
+        elif instruction == "V":
+            self._set_variable = True
 
         elif instruction == "X":
             elem2 = self.pop()
