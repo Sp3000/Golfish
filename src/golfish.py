@@ -96,15 +96,15 @@ class Interpreter():
         # Wrap around
         if self._pos[1] in self._board:
             if self._dir == DIRECTIONS[">"] and self._pos[0] > max(self._board[self._pos[1]].keys()):
-                self._pos[0] = min(self._board[self._pos[1]].keys())
+                self._pos[0] = 0
 
-            elif self._dir == DIRECTIONS["<"] and self._pos[0] < min(self._board[self._pos[1]].keys()):
+            elif self._dir == DIRECTIONS["<"] and self._pos[0] < 0:
                 self._pos[0] = max(self._board[self._pos[1]].keys())
 
         elif self._dir == DIRECTIONS["v"] and self._pos[1] > max(self._board.keys()):
-            self._pos[1] = min(self._board.keys())
+            self._pos[1] = 0
         
-        elif self._dir == DIRECTIONS["^"] and self._pos[1] < min(self._board.keys()):
+        elif self._dir == DIRECTIONS["^"] and self._pos[1] < 0:
             self._pos[1] = max(self._board.keys())
             
 
@@ -342,9 +342,9 @@ class Interpreter():
             elem = self.pop()
 
             if self.is_num(elem):
-                self._curr_stack[-elem:] = [self._curr_stack[-elem:]]
+                self.push([self.pop() for _ in range(elem)][::-1])
 
-            else:
+            elif self.is_array(elem):
                 self._curr_stack.extend(elem)
 
         elif instruction == "B":
@@ -379,14 +379,6 @@ class Interpreter():
                 if elem >= 0:
                     self.push(elem)
                     self._skip = 1
-
-        elif instruction == "D":
-            elem2 = self.pop()
-            elem1 = self.pop()
-
-            if self.is_num(elem1) and self.is_num(elem2):
-                self.push(elem1 // elem2)
-                self.push(elem1 % elem2)
 
         elif instruction == "G":
             elem = self.pop()
@@ -445,7 +437,7 @@ class Interpreter():
                 self._skip = max(0, skip)
 
         elif instruction == "S":
-            pass # Shouldn't reach here
+            raise InvalidStateException # Shouldn't reach here
 
         elif instruction == "T":
             self._bookmark_pos = self._pos[:]
@@ -520,9 +512,9 @@ class Interpreter():
             self.output_as_char(self.pop())
 
         elif instruction == "p":
-            char = self.pop()
             y = self.pop()
             x = self.pop()
+            char = self.pop()
 
             self._board[y][x] = char
 
@@ -761,9 +753,14 @@ if __name__ == "__main__":
     except Exception as e:
         pos = interpreter._pos
         char = interpreter._board[pos[1]][pos[0]]
-        
-        print("something smells fishy... "
-              "(instruction {} '{}' at {},{})".format(char, chr(char), pos[0], pos[1]))
+
+        if isinstance(char, list):
+            print("something smells fishy... "
+                  "(instruction {} at {},{})".format(char, pos[0], pos[1]))
+
+        else:
+            print("something smells fishy... "
+                  "(instruction {} '{}' at {},{})".format(char, chr(char), pos[0], pos[1]))
 
         # For debugging
         if len(sys.argv) > 2 and "-d" in sys.argv[2:]:
