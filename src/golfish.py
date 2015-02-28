@@ -1,0 +1,785 @@
+"""
+Golfish, the 2D golf-ish language based on ><>
+
+Requires Python 3 (tested on Python 3.4.2)
+
+Version: 0.1.1 (updated 18 Feb 2015)
+"""
+
+from collections import defaultdict, namedtuple
+from copy import deepcopy
+import sys
+from getch import _Getch
+
+from fractions import gcd
+from functools import reduce
+import operator
+import random
+import cmath
+import math
+
+from bookmark import BookmarkManager, BookmarkTypes
+from library import *
+
+DIGITS = "0123456789abcdef"
+
+DIRECTIONS = {"^": (0, -1),
+              ">": (1, 0),
+              "v": (0, 1),
+              "<": (-1, 0)}
+
+MIRRORS = {"/": lambda x,y: (-y, -x),
+           "\\": lambda x,y: (y, x),
+           "|": lambda x,y: (-x, y),
+           "_": lambda x,y: (x, -y),
+           "#": lambda x,y: (-x, -y)}
+
+getch = _Getch()
+
+class HaltProgram(Exception):
+    pass
+
+class InvalidStateException(Exception):
+    pass
+
+class Interpreter():
+    def __init__(self, code):
+        rows = code.split("\n")
+        self._board = defaultdict(lambda: defaultdict(int))
+        x = y = 0
+
+        for char in code:
+            if char == "\n":
+                y += 1
+                x = 0
+
+            else:
+                self._board[y][x] = ord(char)
+                x += 1
+        
+        self._pos = [-1, 0] # [x, y]
+        self._dir = DIRECTIONS[">"]
+
+        self._stacks = defaultdict(list)
+        self._stack_num = 0
+        self._curr_stack = self._stacks[self._stack_num]
+
+        self._registers = defaultdict(int)
+
+        self._last_printed = ""
+        self._output_buffer = []
+
+        self._toggled = False # S
+        self._skip = 0 # ?! and more
+        
+        self._push_char = False # `
+
+        self._escape = False
+        self._char_parse = False # '
+        self._array_parse = False # "
+        self._parse_buffer = []
+
+        self._bookmarks = BookmarkManager() # tT
+
+    def tick(self):
+        self.move()
+
+        if self._pos[1] in self._board and self._pos[0] in self._board[self._pos[1]]:
+            self.handle_instruction(self._board[self._pos[1]][self._pos[0]])
+
+    def move(self):
+        if isinstance(self._pos[0], float) or isinstance(self._pos[1], float):
+            raise InvalidStateException
+            
+        # Move forward one step
+        self._pos[0] += self._dir[0]
+        self._pos[1] += self._dir[1]
+
+        # Wrap around
+        if self._pos[1] in self._board:
+            if self._dir == DIRECTIONS[">"] and self._pos[0] > max(self._board[self._pos[1]].keys()):
+                self._pos[0] = min(self._board[self._pos[1]].keys())
+
+            elif self._dir == DIRECTIONS["<"] and self._pos[0] < min(self._board[self._pos[1]].keys()):
+                self._pos[0] = max(self._board[self._pos[1]].keys())
+
+        elif self._dir == DIRECTIONS["v"] and self._pos[1] > max(self._board.keys()):
+            self._pos[1] = min(self._board.keys())
+        
+        elif self._dir == DIRECTIONS["^"] and self._pos[1] < min(self._board.keys()):
+            self._pos[1] = max(self._board.keys())
+            
+
+    def handle_instruction(self, char):
+        instruction = chr(char)
+
+        if self._char_parse:
+            if self._escape:
+                if instruction in "'`nr":
+                    self.push({"'": 39, "`": 96, "n": 10, "r": 13}[instruction])
+
+                else:
+                    self.push(96)
+                    self.push(char)
+
+                self._escape = False
+
+            else:
+                if instruction == "'":
+                    self._char_parse = False
+
+                elif instruction == "`":
+                    self._escape = True
+
+                else:
+                    self.push(char)
+
+            return
+
+        if self._array_parse:
+            if self._escape:
+                if instruction in '"`nr':
+                    self._parse_buffer.append({'"': 34, '`': 96, 'n': 10, 'r': 13}[instruction])
+
+                else:
+                    self._parse_buffer.append(96)
+                    self._parse_buffer.append(char)
+
+                self._escape = False
+
+            else:
+                if instruction == '"':
+                    self._array_parse = False
+                    self.push(self._parse_buffer)
+                    self._parse_buffer = []
+
+                elif instruction == "`":
+                    self._escape = True
+
+                else:
+                    self._parse_buffer.append(char)
+
+            return
+            
+        if self._push_char:
+            self.push(char)
+            self._push_char = False
+            return
+
+        if self._skip and (self._toggled or char != "S"):
+            self._skip -= 1
+            return
+        
+        if self._toggled:
+            self.handle_switched_instruction(instruction)
+            self._toggled = False
+
+        else:
+            self.handle_normal_instruction(instruction)
+            
+
+    def handle_normal_instruction(self, instruction):
+        if instruction in DIRECTIONS:
+            self._dir = DIRECTIONS[instruction]
+
+        elif instruction in MIRRORS:
+            self._dir = MIRRORS[instruction](*self._dir)
+
+        elif instruction in DIGITS:
+            self.push(DIGITS.index(instruction))
+
+        elif instruction == "!":
+            self._skip = 1
+
+        elif instruction == '"':
+            self._array_parse = True
+
+        elif instruction == "$":
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            self.push(elem2)
+            self.push(elem1)
+            
+        elif instruction == "%":
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            if self.is_num(elem1) and self.is_num(elem2):
+                self.push(elem1 % elem2)
+
+            else:
+                raise NotImplementedError
+
+        elif instruction == "&":
+            if self._stack_num in self._registers:
+                elem = self._registers[self._stack_num]
+                del self._registers[self._stack_num]
+                self.push(elem)
+
+            else:
+                elem = self.pop()
+                self._registers[self._stack_num] = elem
+
+        elif instruction == "'":
+            self._char_parse = True
+
+        elif instruction == "(":
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            if (self.is_num(elem1) and self.is_num(elem2) or
+                self.is_array(elem1) and self.is_array(elem2)):
+                
+                self.push(1 if elem1 < elem2 else 0)
+
+            elif self.is_array(elem1) and self.is_num(elem2):
+                self.push(elem1[elem2:])
+
+            else:
+                raise NotImplementedError
+
+        elif instruction == ")":
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            if (self.is_num(elem1) and self.is_num(elem2) or
+                self.is_array(elem1) and self.is_array(elem2)):
+
+                self.push(1 if elem1 > elem2 else 0)
+
+            elif self.is_array(elem1) and self.is_num(elem2):
+                self.push(elem1[:elem2])
+
+            else:
+                raise NotImplementedError
+
+        elif instruction == "*":
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            if self.is_num(elem1) and self.is_num(elem2):
+                self.push(elem1 * elem2)
+
+            elif self.is_array(elem1) and self.is_num(elem2):
+                self.push(elem1 * elem2)
+
+            elif self.is_array(elem1) and self.is_array(elem2):
+                self.push(sorted(set(elem1) & set(elem2)))
+
+        elif instruction == "+":
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            if self.is_num(elem1) and self.is_num(elem2):
+                self.push(elem1 + elem2)
+
+            elif self.is_array(elem1) and self.is_array(elem2):
+                self.push(elem1 + elem2)
+
+        elif instruction == ",":
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            div = elem1 / elem2
+
+            if int(div) == div:
+                div = int(div)
+                
+            self.push(div)
+
+        elif instruction == "-":
+            elem2 = self.pop()
+            elem1 = self.pop()
+            
+            self.push(elem1 - elem2)
+
+        elif instruction == ".":
+            y = self.pop()
+            x = self.pop()
+
+            self._pos = [x, y]
+
+        elif instruction == ":":
+            elem = self.pop()
+
+            self.push(elem)
+            self.push(deepcopy(elem))
+            
+        elif instruction == ";":                
+            self.halt()
+
+        elif instruction == "=":
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            self.push(1 if elem1 == elem2 else 0)
+
+        elif instruction == "?":
+            condition = self.pop()
+
+            if not condition:
+                self._skip = 1
+
+        elif instruction == "@":
+            elem3 = self.pop()
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            self.push(elem3)
+            self.push(elem1)
+            self.push(elem2)
+            
+        elif instruction == "A":
+            elem = self.pop()
+
+            if self.is_num(elem):
+                self._curr_stack[-elem:] = [self._curr_stack[-elem:]]
+
+            else:
+                self._curr_stack.extend(elem)
+
+        elif instruction == "B":
+            base = self.pop()
+            elem = self.pop()
+
+            if self.is_num(elem):
+                if elem == 0:
+                    self.push([0])
+
+                else:
+                    converted = []
+                    # TODO: negative numbers
+                    while elem > 0:
+                        remainder = elem % base
+                        converted.append(remainder)
+                        elem //= base
+
+                    self.push(converted[::-1])
+
+            elif self.is_array(elem):
+                converted = sum(base**i * x for i,x in enumerate(elem[::-1]))
+                self.push(converted)
+
+        elif instruction == "C":
+            elem = self.pop()
+
+            if elem >= 0:
+                self.push(elem)
+                self._skip = 1
+
+        elif instruction == "D":
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            if self.is_num(elem1) and self.is_num(elem2):
+                self.push(elem1 // elem2)
+                self.push(elem1 % elem2)
+
+        elif instruction == "G":
+            elem = self.pop()
+
+            if self.is_num(elem):
+                self.push(list(range(elem)))
+
+            elif self.is_array(elem):
+                self.push(len(elem))
+
+        elif instruction == "H":
+            for elem in self._curr_stack:
+                self.output_as_char(elem)
+
+            self.halt()
+
+        elif instruction == "I":
+            num = ""
+            char = self.read_char()
+
+            while char >= 0 and "0" <= chr(char) <= "9":
+                num += chr(char)
+                char = self.read_char()
+
+            self.push(int(num) if num else -1)
+
+        elif instruction == "J":
+            y = self.pop()
+            x = self.pop()
+            condition = self.pop()
+
+            if condition:
+                self._pos = [x, y]
+
+        elif instruction == "M":
+            elem = self.pop()
+
+            if self.is_num(elem):
+                self.push(elem - 1)
+
+            else:
+                if not elem:
+                    self.push([])
+
+                else:
+                    first = elem.pop(0)
+                    self.push(first)
+                    self._bookmarks.add_map(self._pos, self._dir, elem)
+
+        elif instruction == "N":
+            elem = self.pop()
+            self.push(0 if elem else 1)
+
+        elif instruction == "P":
+            elem = self.pop()
+            self.push(elem + 1)
+
+        elif instruction == "Q":
+            skip = self.pop()
+            cond = self.pop()
+
+            if not cond:
+                self._skip = max(0, skip)
+
+        elif instruction == "R":
+            elem = self.pop()
+
+            if self.is_num(elem):
+                self._bookmarks.add_repeat(self._pos, self._dir, elem)
+
+            else:
+                first = elem.pop(0)
+                self.push(first)
+
+                if elem:
+                    second = elem.pop(0)
+                    self.push(second)
+                    self._bookmarks.add_reduce(self._pos, self._dir, elem)
+
+        elif instruction == "S":
+            self._toggled = True
+
+        elif instruction == "T":
+            self._bookmarks.add_teleport(self._pos, self._dir)
+
+        elif instruction == "V":
+            elem = self.pop()
+
+            if elem:
+                self._curr_stack.extend(self._curr_stack[-elem:])
+
+        elif instruction == "X":
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            if self.is_array(elem1) and self.is_num(elem2):
+                if elem2 in elem1:
+                    self.push(elem1.index(elem2))
+
+                else:
+                    self.push(-1)
+
+            elif self.is_num(elem1) and self.is_array(elem2):
+                if elem1 in elem2:
+                    # rindex
+                    self.push(len(elem2) - elem2[::-1].index(elem1) - 1)
+
+                else:
+                    self.push(-1)
+
+            elif self.is_num(elem1) and self.is_num(elem2):
+                result = elem1 ** elem2
+
+                if not isinstance(result, complex) and int(result) == result:
+                    result = int(result)
+                    
+                self.push(result)
+                    
+        elif instruction == "Z":
+            condition = self.pop()
+            self.push(condition)
+
+            if condition:
+                self._skip = 1
+
+        elif instruction == "`":
+            self._push_char = True
+
+        elif instruction == "g":
+            y = self.pop()
+            x = self.pop()
+
+            if y in self._board and x in self._board[y]:
+                self.push(self._board[y][x])
+
+            else:
+                self.push(0)
+
+        elif instruction == "h":
+            self.output_as_num(self.pop())
+            self.halt()
+
+        elif instruction == "i":
+            self.push(self.read_char())
+
+        elif instruction == "k":
+            self.push(ord('"'))
+
+        elif instruction == "l":
+            self.push(len(self._curr_stack))
+
+        elif instruction == "n":
+            self.output_as_num(self.pop())
+
+        elif instruction == "o":
+            self.output_as_char(self.pop())
+
+        elif instruction == "p":
+            char = self.pop()
+            y = self.pop()
+            x = self.pop()
+
+            self._board[y][x] = char
+
+        elif instruction == "q":
+            cond = self.pop()
+
+            if not cond:
+                self._skip = 2
+
+        elif instruction == "r":
+            self._curr_stack = self._curr_stack[::-1]
+
+        elif instruction == "s":
+            self._curr_stack.sort(reverse=True)
+
+        elif instruction == "t":
+            type_, args = self._bookmarks.teleport(self._pos, self._dir, self._curr_stack)
+
+            self._pos = args[0][:]
+            self._dir = args[1][:]
+
+            if type_ == BookmarkTypes.MAP:
+                self.push(args[2])
+
+            elif type_ == BookmarkTypes.REDUCE and len(args) > 2:
+                self.push(args[2])
+
+        elif instruction == "w":
+            self.push(self._pos[0])
+            self.push(self._pos[1])
+                
+        elif instruction == "x":
+            self._dir = random.choice(list(DIRECTIONS.values()))
+
+        elif instruction == "z":
+            self.push(-1)
+
+        elif instruction == "[":
+            elem = self.pop()
+            
+            if elem > 0:
+                to_move, self._stacks[self._stack_num] = self._curr_stack[-elem:], self._curr_stack[:-elem]
+            else:
+                to_move = []
+
+            self._stack_num -= 1
+            self._curr_stack = self._stacks[self._stack_num]
+            self._curr_stack.extend(to_move)
+
+        elif instruction == "]":
+            elem = self.pop()
+
+            if elem > 0:
+                to_move, self._stacks[self._stack_num] = self._curr_stack[-elem:], self._curr_stack[:-elem]
+            else:
+                to_move = []
+            
+            self._stack_num += 1
+            self._curr_stack = self._stacks[self._stack_num]
+            self._curr_stack.extend(to_move)
+
+        elif instruction == "{":
+            self.rotate_left()
+
+        elif instruction == "}":
+            self.rotate_right()
+
+        elif instruction == "~":
+            self.pop()
+
+        else:
+            pass
+
+
+    def handle_switched_instruction(self, instruction):
+        if instruction == "%":
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            self.push(gcd(elem1, elem2))
+
+        elif instruction == "2":
+            self.push(math.e)
+
+        elif instruction == "3":
+            self.push(math.pi)
+
+        elif instruction == "?":
+            cond = self.pop()
+            elem = self.pop()
+
+            if cond:
+                self.push(elem)
+                
+            else:
+                self._skip = 1
+                
+        elif instruction == "D":
+            self.output(str(self._curr_stack))
+
+        elif instruction == "P":
+            elem = self.pop()
+            self.push(1 if is_probably_prime(elem) else 0)
+
+        elif instruction == "l":
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            if self.is_num(elem1) and self.is_num(elem2):
+                self.push(math.log(elem1, elem2))
+
+        elif instruction == "n":
+            self.output_as_num(self.pop(), buffer=False)
+            
+        elif instruction == "s":
+            random.shuffle(self._curr_stack)
+
+        elif instruction == "x":
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            self.push(random.randint(math.ceil(elem1), math.floor(elem2)))
+
+        else:
+            pass
+
+
+    def is_num(self, elem):
+        return any(isinstance(elem, x) for x in [int, float, complex])
+
+
+    def is_array(self, elem):
+        return isinstance(elem, list)
+
+
+    def push(self, elem):
+        self._curr_stack.append(elem)
+
+
+    def pop(self):
+        if self._curr_stack:
+            return self._curr_stack.pop()
+
+        else:
+            return 0
+
+
+    def rotate_left(self):
+        self._curr_stack = self._curr_stack[1:] + self._curr_stack[:1]
+
+
+    def rotate_right(self):
+        self._curr_stack = self._curr_stack[-1:] + self._curr_stack[:-1]
+
+
+    def read_char(self):       
+        if sys.stdin.isatty():
+            # Console
+            char = getch()
+
+            if ord(char) == 3:
+                raise KeyboardInterrupt
+
+        else:
+            char = sys.stdin.read(1)
+
+        return ord(char) if char else -1
+
+
+    def _chr(self, elem):
+        return chr(round(elem))
+
+
+    def output(self, out):
+        self.output_check(out)
+        sys.stdout.write(out)
+        sys.stdout.flush()
+
+        if out:
+            self._last_printed = out[-1]
+
+
+    def output_check(self, out):
+        if self._output_buffer:
+            if self._output_buffer == [" "]:
+                if not (out and out[0].isspace()):
+                    self.output(" ")
+
+                self._output_buffer.clear()
+            
+
+    def output_as_char(self, out):
+        if self.is_num(out):
+            self.output(self._chr(out))
+
+        else:
+            for elem in out:
+                self.output_as_char(elem)
+
+
+    def output_as_num(self, out, buffer=True):
+        if self.is_num(out):
+            self.output(str(out))
+
+            if buffer:
+                self._output_buffer.append(" ")
+
+        else:
+            for elem in out:
+                self.output_as_num(elem)
+
+
+    def halt(self):
+        raise HaltProgram
+
+if __name__ == "__main__":
+    if len(sys.argv) == 1:
+        print("Please include a filename")
+        exit()
+        
+    filename = sys.argv[1]
+
+    with open(filename) as infile:
+        interpreter = Interpreter(infile.read())
+
+    try:
+        while True:
+            interpreter.tick()
+
+    except HaltProgram:
+        pass
+    
+    except KeyboardInterrupt:    
+        print("^C")
+
+    except Exception as e:
+        pos = interpreter._pos
+        char = interpreter._board[pos[1]][pos[0]]
+        
+        print("something smells fishy... "
+              "(instruction {} '{}' at {},{})".format(char, chr(char), pos[0], pos[1]))
+
+        # For debugging
+        if len(sys.argv) > 2 and "-d" in sys.argv[2:]:
+            raise e
+
+    
