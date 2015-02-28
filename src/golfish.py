@@ -3,7 +3,7 @@ Golfish, the 2D golf-ish language based on ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.2.1 (updated 28 Feb 2015)
+Version: 0.2.2 (updated 28 Feb 2015)
 """
 
 from collections import defaultdict, namedtuple
@@ -413,6 +413,20 @@ class Interpreter():
             if condition:
                 self._pos = [x, y]
 
+        elif instruction == "K":
+            elem = self.pop()
+
+            if self.is_num(elem):
+                popped = []
+                
+                for _ in range(elem):
+                    popped.append(self.pop())
+
+                popped.reverse()
+
+                self._curr_stack.extend(popped)
+                self._curr_stack.extend(deepcopy(popped))   
+
         elif instruction == "M":
             elem = self.pop()
 
@@ -495,6 +509,12 @@ class Interpreter():
 
         elif instruction == "i":
             self.push(self.read_char())
+
+        elif instruction == "k":
+            elem = self.pop()
+
+            if self.is_num(elem):
+                self.push(deepcopy(self._curr_stack[~elem]))
 
         elif instruction == "l":
             self.push(len(self._curr_stack))
