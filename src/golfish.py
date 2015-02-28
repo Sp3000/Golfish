@@ -18,7 +18,6 @@ import random
 import cmath
 import math
 
-from bookmark import BookmarkManager, BookmarkTypes
 from library import *
 
 DIGITS = "0123456789abcdef"
@@ -60,11 +59,9 @@ class Interpreter():
         self._pos = [-1, 0] # [x, y]
         self._dir = DIRECTIONS[">"]
 
-        self._stacks = defaultdict(list)
-        self._stack_num = 0
-        self._curr_stack = self._stacks[self._stack_num]
-
-        self._registers = defaultdict(int)
+        self._stack_stack = [[]]
+        self._curr_stack = self._stack_stack[-1]
+        self._register_stack = [None]
 
         self._last_printed = ""
         self._output_buffer = []
@@ -79,7 +76,8 @@ class Interpreter():
         self._array_parse = False # "
         self._parse_buffer = []
 
-        self._bookmarks = BookmarkManager() # tT
+        self._bookmark_pos = [-1, 0] # tT
+        self._bookmark_dir = DIRECTIONS[">"]
 
     def tick(self):
         self.move()
@@ -88,7 +86,7 @@ class Interpreter():
             self.handle_instruction(self._board[self._pos[1]][self._pos[0]])
 
     def move(self):
-        if isinstance(self._pos[0], float) or isinstance(self._pos[1], float):
+        if any(not isinstance(coord, int) for coord in self._pos):
             raise InvalidStateException
             
         # Move forward one step
@@ -166,9 +164,17 @@ class Interpreter():
             self._push_char = False
             return
 
-        if self._skip and (self._toggled or char != "S"):
-            self._skip -= 1
+        if instruction == "S" and not self._toggled:
+            self._toggled = True
             return
+
+        if self._skip > 0:
+            self._skip -= 1
+            self._toggled = False
+            return
+
+        elif self._skip < 0:
+            self._skip = 0
         
         if self._toggled:
             self.handle_switched_instruction(instruction)
@@ -208,18 +214,13 @@ class Interpreter():
             if self.is_num(elem1) and self.is_num(elem2):
                 self.push(elem1 % elem2)
 
-            else:
-                raise NotImplementedError
-
         elif instruction == "&":
-            if self._stack_num in self._registers:
-                elem = self._registers[self._stack_num]
-                del self._registers[self._stack_num]
-                self.push(elem)
+            if self._register_stack[-1] is None:
+                self._register_stack[-1] = self.pop()
 
             else:
-                elem = self.pop()
-                self._registers[self._stack_num] = elem
+                self.push(self._register_stack.pop())
+                self._register_stack.append(None)
 
         elif instruction == "'":
             self._char_parse = True
@@ -236,8 +237,8 @@ class Interpreter():
             elif self.is_array(elem1) and self.is_num(elem2):
                 self.push(elem1[elem2:])
 
-            else:
-                raise NotImplementedError
+            elif self.is_array(elem2) and self.is_num(elem1):
+                self.push(elem2[elem1:])
 
         elif instruction == ")":
             elem2 = self.pop()
@@ -251,8 +252,8 @@ class Interpreter():
             elif self.is_array(elem1) and self.is_num(elem2):
                 self.push(elem1[:elem2])
 
-            else:
-                raise NotImplementedError
+            elif self.is_array(elem2) and self.is_num(elem1):
+                self.push(elem2[:elem1])
 
         elif instruction == "*":
             elem2 = self.pop()
@@ -261,11 +262,10 @@ class Interpreter():
             if self.is_num(elem1) and self.is_num(elem2):
                 self.push(elem1 * elem2)
 
-            elif self.is_array(elem1) and self.is_num(elem2):
+            elif (self.is_array(elem1) and self.is_num(elem2) or
+                  self.is_num(elem1) and self.is_array(elem2)):
+                
                 self.push(elem1 * elem2)
-
-            elif self.is_array(elem1) and self.is_array(elem2):
-                self.push(sorted(set(elem1) & set(elem2)))
 
         elif instruction == "+":
             elem2 = self.pop()
@@ -277,22 +277,30 @@ class Interpreter():
             elif self.is_array(elem1) and self.is_array(elem2):
                 self.push(elem1 + elem2)
 
+            elif self.is_num(elem1) and self.is_array(elem2):
+                self.push([elem1] + elem2)
+
+            elif self.is_array(elem1) and self.is_num(elem2):
+                self.push(elem1 + [elem2])
+
         elif instruction == ",":
             elem2 = self.pop()
             elem1 = self.pop()
 
-            div = elem1 / elem2
+            if self.is_num(elem1) and self.is_num(elem2):
+                div = elem1 / elem2
 
-            if int(div) == div:
-                div = int(div)
-                
-            self.push(div)
+                if int(div) == div:
+                    div = int(div)
+                    
+                self.push(div)
 
         elif instruction == "-":
             elem2 = self.pop()
             elem1 = self.pop()
-            
-            self.push(elem1 - elem2)
+
+            if self.is_num(elem1) and self.is_num(elem2):
+                self.push(elem1 - elem2)
 
         elif instruction == ".":
             y = self.pop()
@@ -306,7 +314,7 @@ class Interpreter():
             self.push(elem)
             self.push(deepcopy(elem))
             
-        elif instruction == ";":                
+        elif instruction == ";":
             self.halt()
 
         elif instruction == "=":
@@ -344,12 +352,15 @@ class Interpreter():
             elem = self.pop()
 
             if self.is_num(elem):
+                # Negative numbers?
+                elem = abs(elem)
+                
                 if elem == 0:
                     self.push([0])
 
                 else:
                     converted = []
-                    # TODO: negative numbers
+                    
                     while elem > 0:
                         remainder = elem % base
                         converted.append(remainder)
@@ -364,9 +375,10 @@ class Interpreter():
         elif instruction == "C":
             elem = self.pop()
 
-            if elem >= 0:
-                self.push(elem)
-                self._skip = 1
+            if self.is_num(elem):
+                if elem >= 0:
+                    self.push(elem)
+                    self._skip = 1
 
         elif instruction == "D":
             elem2 = self.pop()
@@ -395,7 +407,7 @@ class Interpreter():
             num = ""
             char = self.read_char()
 
-            while char >= 0 and "0" <= chr(char) <= "9":
+            while char >= 0 and chr(char) in "0123456789":
                 num += chr(char)
                 char = self.read_char()
 
@@ -415,22 +427,15 @@ class Interpreter():
             if self.is_num(elem):
                 self.push(elem - 1)
 
-            else:
-                if not elem:
-                    self.push([])
-
-                else:
-                    first = elem.pop(0)
-                    self.push(first)
-                    self._bookmarks.add_map(self._pos, self._dir, elem)
-
         elif instruction == "N":
             elem = self.pop()
             self.push(0 if elem else 1)
 
         elif instruction == "P":
             elem = self.pop()
-            self.push(elem + 1)
+
+            if self.is_num(elem):
+                self.push(elem + 1)
 
         elif instruction == "Q":
             skip = self.pop()
@@ -439,32 +444,12 @@ class Interpreter():
             if not cond:
                 self._skip = max(0, skip)
 
-        elif instruction == "R":
-            elem = self.pop()
-
-            if self.is_num(elem):
-                self._bookmarks.add_repeat(self._pos, self._dir, elem)
-
-            else:
-                first = elem.pop(0)
-                self.push(first)
-
-                if elem:
-                    second = elem.pop(0)
-                    self.push(second)
-                    self._bookmarks.add_reduce(self._pos, self._dir, elem)
-
         elif instruction == "S":
-            self._toggled = True
+            pass # Shouldn't reach here
 
         elif instruction == "T":
-            self._bookmarks.add_teleport(self._pos, self._dir)
-
-        elif instruction == "V":
-            elem = self.pop()
-
-            if elem:
-                self._curr_stack.extend(self._curr_stack[-elem:])
+            self._bookmark_pos = self._pos[:]
+            self._bookmark_dir = self._dir
 
         elif instruction == "X":
             elem2 = self.pop()
@@ -477,10 +462,9 @@ class Interpreter():
                 else:
                     self.push(-1)
 
-            elif self.is_num(elem1) and self.is_array(elem2):
+            if self.is_num(elem1) and self.is_array(elem2):
                 if elem1 in elem2:
-                    # rindex
-                    self.push(len(elem2) - elem2[::-1].index(elem1) - 1)
+                    self.push(elem2.index(elem1))
 
                 else:
                     self.push(-1)
@@ -526,6 +510,9 @@ class Interpreter():
         elif instruction == "l":
             self.push(len(self._curr_stack))
 
+        elif instruction == "m":
+            self.push(-1)
+
         elif instruction == "n":
             self.output_as_num(self.pop())
 
@@ -546,10 +533,7 @@ class Interpreter():
                 self._skip = 2
 
         elif instruction == "r":
-            self._curr_stack = self._curr_stack[::-1]
-
-        elif instruction == "s":
-            self._curr_stack.sort(reverse=True)
+            self._curr_stack.reverse()
 
         elif instruction == "t":
             type_, args = self._bookmarks.teleport(self._pos, self._dir, self._curr_stack)
@@ -562,10 +546,6 @@ class Interpreter():
 
             elif type_ == BookmarkTypes.REDUCE and len(args) > 2:
                 self.push(args[2])
-
-        elif instruction == "w":
-            self.push(self._pos[0])
-            self.push(self._pos[1])
                 
         elif instruction == "x":
             self._dir = random.choice(list(DIRECTIONS.values()))
@@ -577,25 +557,26 @@ class Interpreter():
             elem = self.pop()
             
             if elem > 0:
-                to_move, self._stacks[self._stack_num] = self._curr_stack[-elem:], self._curr_stack[:-elem]
+                to_move, self._stack_stack[-1] = self._curr_stack[-elem:], self._curr_stack[:-elem]
             else:
                 to_move = []
 
-            self._stack_num -= 1
-            self._curr_stack = self._stacks[self._stack_num]
-            self._curr_stack.extend(to_move)
+            self._stack_stack.append(to_move)
+            self._curr_stack = self._stack_stack[-1]
+            self._register_stack.append(None)
 
-        elif instruction == "]":
-            elem = self.pop()
+        elif instruction == "]":           
+            if len(self._stack_stack) == 1:
+                self._stack_stack = [[]]
+                self._curr_stack = self._stack_stack[-1]
+                self._register_stack = [None]
 
-            if elem > 0:
-                to_move, self._stacks[self._stack_num] = self._curr_stack[-elem:], self._curr_stack[:-elem]
             else:
-                to_move = []
-            
-            self._stack_num += 1
-            self._curr_stack = self._stacks[self._stack_num]
-            self._curr_stack.extend(to_move)
+                self._register_stack.pop()
+
+                last = self._stack_stack.pop()
+                self._curr_stack = self._stack_stack[-1]
+                self._curr_stack.extend(last)
 
         elif instruction == "{":
             self.rotate_left()
@@ -606,8 +587,8 @@ class Interpreter():
         elif instruction == "~":
             self.pop()
 
-        else:
-            pass
+        elif " " < instruction <= "~":
+            raise NotImplementedError
 
 
     def handle_switched_instruction(self, instruction):
@@ -638,7 +619,9 @@ class Interpreter():
 
         elif instruction == "P":
             elem = self.pop()
-            self.push(1 if is_probably_prime(elem) else 0)
+
+            if self.is_num(elem):
+                self.push(1 if is_probably_prime(elem) else 0)
 
         elif instruction == "l":
             elem2 = self.pop()
@@ -649,18 +632,16 @@ class Interpreter():
 
         elif instruction == "n":
             self.output_as_num(self.pop(), buffer=False)
-            
-        elif instruction == "s":
-            random.shuffle(self._curr_stack)
 
         elif instruction == "x":
             elem2 = self.pop()
             elem1 = self.pop()
 
-            self.push(random.randint(math.ceil(elem1), math.floor(elem2)))
+            if self.is_num(elem1) and self.is_num(elem2):
+                self.push(random.randint(math.ceil(elem1), math.floor(elem2)))
 
-        else:
-            pass
+        elif " " < instruction <= "~":
+            raise NotImplementedError
 
 
     def is_num(self, elem):
@@ -671,25 +652,31 @@ class Interpreter():
         return isinstance(elem, list)
 
 
-    def push(self, elem):
-        self._curr_stack.append(elem)
+    def push(self, elem, index=None):
+        if index is None:
+            self._curr_stack.append(elem)
+
+        else:
+            self._curr_stack.insert(index, elem)
 
 
-    def pop(self):
+    def pop(self, index=None):
         if self._curr_stack:
-            return self._curr_stack.pop()
+            if index is None:
+                return self._curr_stack.pop()
+
+            else:
+                return self._curr_stack.pop(index)
 
         else:
             return 0
 
 
     def rotate_left(self):
-        self._curr_stack = self._curr_stack[1:] + self._curr_stack[:1]
-
+        self.push(self.pop(index=0))
 
     def rotate_right(self):
-        self._curr_stack = self._curr_stack[-1:] + self._curr_stack[:-1]
-
+        self.push(self.pop(), index=0)
 
     def read_char(self):       
         if sys.stdin.isatty():
