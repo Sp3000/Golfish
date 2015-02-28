@@ -496,9 +496,6 @@ class Interpreter():
         elif instruction == "i":
             self.push(self.read_char())
 
-        elif instruction == "k":
-            self.push(ord('"'))
-
         elif instruction == "l":
             self.push(len(self._curr_stack))
 
