@@ -3,7 +3,7 @@ Golfish, the 2D golf-ish language based on ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.2 (updated 28 Feb 2015)
+Version: 0.2.1 (updated 28 Feb 2015)
 """
 
 from collections import defaultdict, namedtuple
@@ -582,6 +582,26 @@ class Interpreter():
 
             self.push(gcd(elem1, elem2))
 
+        elif instruction == "+":
+            elem = self.pop()
+
+            if self.is_array(elem):
+                if all(map(self.is_num, elem)):
+                    self.push(reduce(operator.add, elem, 0))
+
+                elif all(map(self.is_array, elem)):
+                    self.push(reduce(operator.add, elem, []))
+
+                else:
+                    self.push(reduce(operator.add, [x if self.is_array(x) else [x] for x in elem], []))
+
+        elif instruction == "*":
+            elem = self.pop()
+
+            if self.is_array(elem):
+                if all(map(self.is_num, elem)):
+                    self.push(reduce(operator.mul, elem, 1))
+
         elif instruction == "2":
             self.push(math.e)
 
@@ -612,7 +632,12 @@ class Interpreter():
             elem1 = self.pop()
 
             if self.is_num(elem1) and self.is_num(elem2):
-                self.push(math.log(elem1, elem2))
+                result = math.log(elem1, elem2)
+
+                if elem2**round(result) == elem1:
+                    result = round(result)
+                    
+                self.push(result)
 
         elif instruction == "n":
             self.output_as_num(self.pop(), buffer=False)
@@ -716,7 +741,7 @@ class Interpreter():
 
         else:
             for elem in out:
-                self.output_as_num(elem)
+                self.output_as_num(elem, buffer)
 
 
     def halt(self):
