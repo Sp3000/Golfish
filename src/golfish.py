@@ -6,6 +6,7 @@ Requires Python 3 (tested on Python 3.4.2)
 Version: 0.2.3 (updated 28 Feb 2015)
 """
 
+import codecs
 from collections import defaultdict, namedtuple
 from copy import deepcopy
 import sys
@@ -561,12 +562,31 @@ class Interpreter():
             self.output_as_char(self.pop())
 
         elif instruction == "p":
-            y = self.pop()
-            x = self.pop()
-            char = self.pop()
+            elem3 = self.pop()
+            elem2 = self.pop()
+            elem1 = self.pop()
 
-            self._board[y][x] = char
+            if self.is_num(elem2) and self.is_num(elem3):
+                y = elem3
+                x = elem2
+                char = elem1
 
+                if self.is_num(char):
+                    self._board[y][x] = char
+
+                elif self.is_array(char):
+                    curr_y = y
+                    curr_x = x
+
+                    for c in char:
+                        if c in [10, 13]:
+                            curr_y += 1
+                            curr_x = x
+
+                        else:
+                            self._board[curr_y][curr_x] = c
+                            curr_x += 1                    
+                    
         elif instruction == "q":
             cond = self.pop()
 
@@ -670,11 +690,21 @@ class Interpreter():
         elif instruction == "D":
             self.output(str(self._curr_stack))
 
+        elif instruction == "L":
+            elem = self.pop()
+            lower = lambda e:ord(chr(e).lower()) if self.is_num(e) else list(map(lower, e))
+            self.push(lower(elem))
+
         elif instruction == "P":
             elem = self.pop()
 
             if self.is_num(elem):
                 self.push(1 if is_probably_prime(elem) else 0)
+
+        elif instruction == "U":
+            elem = self.pop()
+            upper = lambda e:ord(chr(e).upper()) if self.is_num(e) else list(map(upper, e))
+            self.push(upper(elem))
 
         elif instruction == "l":
             elem2 = self.pop()
@@ -803,8 +833,13 @@ if __name__ == "__main__":
         
     filename = sys.argv[1]
 
-    with open(filename) as infile:
-        interpreter = Interpreter(infile.read())
+    try:
+        with open(filename) as infile:
+            interpreter = Interpreter(infile.read())
+
+    except UnicodeDecodeError:
+        with codecs.open(filename, "r", "utf_8") as infile:
+            interpreter = Interpreter(infile.read())
 
     try:
         while True:
