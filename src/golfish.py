@@ -3,7 +3,7 @@ Golfish, the 2D golf-ish language based on ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.2.3 (updated 28 Feb 2015)
+Version: 0.2.4 (updated 20 Mar 2015)
 """
 
 import codecs
@@ -30,8 +30,6 @@ DIRECTIONS = {"^": (0, -1),
 
 MIRRORS = {"/": lambda x,y: (-y, -x),
            "\\": lambda x,y: (y, x),
-           "|": lambda x,y: (-x, y),
-           "_": lambda x,y: (x, -y),
            "#": lambda x,y: (-x, -y)}
 
 getch = _Getch()
@@ -71,10 +69,10 @@ class Interpreter():
         self._skip = 0 # ?! and more
         
         self._push_char = False # `
-
+        self._push_array = False # "
+        
         self._escape = False
-        self._char_parse = False # '
-        self._array_parse = False # "
+        self._array_parse = False # '
         self._parse_buffer = []
 
         self._bookmark_pos = [-1, 0] # tT
@@ -82,6 +80,7 @@ class Interpreter():
 
         self._variable_map = {}
         self._set_variable = False
+        
 
     def tick(self):
         self.move()
@@ -115,10 +114,6 @@ class Interpreter():
     def handle_instruction(self, char):
         instruction = chr(char)
 
-        if instruction in self._variable_map:
-            self.push(self._variable_map[instruction])
-            return
-
         if self._set_variable == True:
             elem = self.pop()
             self._variable_map[instruction] = deepcopy(elem)
@@ -127,42 +122,23 @@ class Interpreter():
             self._set_variable = False
             return
 
-        if self._char_parse:
-            if self._escape:
-                if instruction in "'`nr":
-                    self.push({"'": 39, "`": 96, "n": 10, "r": 13}[instruction])
-
-                else:
-                    self.push(96)
-                    self.push(char)
-
-                self._escape = False
-
-            else:
-                if instruction == "'":
-                    self._char_parse = False
-
-                elif instruction == "`":
-                    self._escape = True
-
-                else:
-                    self.push(char)
-
+        if instruction in self._variable_map:
+            self.push(self._variable_map[instruction])
             return
 
         if self._array_parse:
             if self._escape:
-                if instruction in '"`nr':
-                    self._parse_buffer.append({'"': 34, '`': 96, 'n': 10, 'r': 13}[instruction])
+                if instruction in "'`nr":
+                    self._parse_buffer.append({"'": 39, "`": 96, "n": 10, "r": 13}[instruction])
 
                 else:
-                    self._parse_buffer.append(96)
+                    self._parse_buffer.append(ord("`"))
                     self._parse_buffer.append(char)
 
                 self._escape = False
 
             else:
-                if instruction == '"':
+                if instruction == "'":
                     self._array_parse = False
                     self.push(self._parse_buffer)
                     self._parse_buffer = []
@@ -178,6 +154,11 @@ class Interpreter():
         if self._push_char:
             self.push(char)
             self._push_char = False
+            return
+
+        if self._push_array:
+            self.push([char])
+            self._push_array = False
             return
 
         if instruction == "S" and not self._toggled:
@@ -214,7 +195,7 @@ class Interpreter():
             self._skip = 1
 
         elif instruction == '"':
-            self._array_parse = True
+            self._push_array = True
 
         elif instruction == "$":
             elem2 = self.pop()
@@ -239,7 +220,7 @@ class Interpreter():
                 self._register_stack.append(None)
 
         elif instruction == "'":
-            self._char_parse = True
+            self._array_parse = True
 
         elif instruction == "(":
             elem2 = self.pop()
@@ -350,9 +331,9 @@ class Interpreter():
             elem2 = self.pop()
             elem1 = self.pop()
 
+            self.push(elem2)
             self.push(elem3)
             self.push(elem1)
-            self.push(elem2)
             
         elif instruction == "A":
             elem = self.pop()
@@ -490,6 +471,9 @@ class Interpreter():
         elif instruction == "V":
             self._set_variable = True
 
+        elif instruction == "W":
+            self.push([self.pop()])
+
         elif instruction == "X":
             elem2 = self.pop()
             elem1 = self.pop()
@@ -603,9 +587,6 @@ class Interpreter():
         elif instruction == "x":
             self._dir = random.choice(list(DIRECTIONS.values()))
 
-        elif instruction == "z":
-            self.push(-1)
-
         elif instruction == "[":
             elem = self.pop()
             
@@ -650,6 +631,15 @@ class Interpreter():
             elem1 = self.pop()
 
             self.push(gcd(elem1, elem2))
+
+        elif instruction == "&":
+            elem = self._register_stack[-1]
+
+            if self.is_num(elem):
+                self._register_stack[-1] += 1
+
+            else:
+                self._register_stack[-1] = 1
 
         elif instruction == "+":
             elem = self.pop()
@@ -813,6 +803,9 @@ class Interpreter():
 
     def output_as_num(self, out, buffer=True):
         if self.is_num(out):
+            if int(out) == out:
+                out = int(out)
+                
             self.output(str(out))
 
             if buffer:
