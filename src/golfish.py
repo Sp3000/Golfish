@@ -69,10 +69,10 @@ class Interpreter():
         self._skip = 0 # ?! and more
         
         self._push_char = False # `
-        self._push_array = False # "
+        self._push_array = False # '
         
         self._escape = False
-        self._array_parse = False # '
+        self._array_parse = False # "
         self._parse_buffer = []
 
         self._bookmark_pos = [-1, 0] # tT
@@ -128,8 +128,8 @@ class Interpreter():
 
         if self._array_parse:
             if self._escape:
-                if instruction in "'`nr":
-                    self._parse_buffer.append({"'": 39, "`": 96, "n": 10, "r": 13}[instruction])
+                if instruction in '"`nr':
+                    self._parse_buffer.append({'"': 34, '`': 96, 'n': 10, 'r': 13}[instruction])
 
                 else:
                     self._parse_buffer.append(ord("`"))
@@ -138,12 +138,12 @@ class Interpreter():
                 self._escape = False
 
             else:
-                if instruction == "'":
+                if instruction == '"':
                     self._array_parse = False
                     self.push(self._parse_buffer)
                     self._parse_buffer = []
 
-                elif instruction == "`":
+                elif instruction == '`':
                     self._escape = True
 
                 else:
@@ -195,7 +195,7 @@ class Interpreter():
             self._skip = 1
 
         elif instruction == '"':
-            self._push_array = True
+            self._array_parse = True
 
         elif instruction == "$":
             elem2 = self.pop()
@@ -220,7 +220,7 @@ class Interpreter():
                 self._register_stack.append(None)
 
         elif instruction == "'":
-            self._array_parse = True
+            self._push_array = True
 
         elif instruction == "(":
             elem2 = self.pop()
