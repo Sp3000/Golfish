@@ -32,6 +32,8 @@ MIRRORS = {"/": lambda x,y: (-y, -x),
            "\\": lambda x,y: (y, x),
            "#": lambda x,y: (-x, -y)}
 
+EOF = -1
+
 getch = _Getch()
 
 class HaltProgram(Exception):
@@ -262,7 +264,7 @@ class Interpreter():
             elif (self.is_array(elem1) and self.is_num(elem2) or
                   self.is_num(elem1) and self.is_array(elem2)):
                 
-                self.push(elem1 * elem2)
+                self.push(deepcopy(elem1 * elem2))
 
         elif instruction == "+":
             elem2 = self.pop()
@@ -376,6 +378,13 @@ class Interpreter():
                 self.push(elem)
                 self._skip = 1
 
+        elif instruction == "D":
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            if self.is_num(elem1) and self.is_num(elem2):
+                self.push(elem1 // elem2)
+
         elif instruction == "G":
             elem = self.pop()
 
@@ -413,12 +422,7 @@ class Interpreter():
             elem = self.pop()
 
             if self.is_num(elem):
-                popped = []
-                
-                for _ in range(elem):
-                    popped.append(self.pop())
-
-                popped.reverse()
+                popped = [self.pop() for _ in range(elem)][::-1]
 
                 self._curr_stack.extend(popped)
                 self._curr_stack.extend(deepcopy(popped))
@@ -436,7 +440,7 @@ class Interpreter():
                     line.append(char)
                     char = self.read_char()
 
-                self.push(line)                
+                self.push(line)          
 
         elif instruction == "M":
             elem = self.pop()
@@ -678,7 +682,12 @@ class Interpreter():
                 self._skip = 1
                 
         elif instruction == "D":
-            self.output(str(self._curr_stack))
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            if self.is_num(elem1) and self.is_num(elem2):
+                self.push(elem1 // elem2)
+                self.push(elem1 % elem2)
 
         elif instruction == "L":
             elem = self.pop()
@@ -695,6 +704,9 @@ class Interpreter():
             elem = self.pop()
             upper = lambda e:ord(chr(e).upper()) if self.is_num(e) else list(map(upper, e))
             self.push(upper(elem))
+
+        elif instruction == "d":
+            self.output(str(self._curr_stack))
 
         elif instruction == "l":
             elem2 = self.pop()
@@ -753,8 +765,10 @@ class Interpreter():
     def rotate_left(self):
         self.push(self.pop(index=0))
 
+
     def rotate_right(self):
         self.push(self.pop(), index=0)
+
 
     def read_char(self):       
         if sys.stdin.isatty():
@@ -767,8 +781,8 @@ class Interpreter():
         else:
             char = sys.stdin.read(1)
 
-        return ord(char) if char else -1
-
+        return ord(char) if char else EOF
+    
 
     def _chr(self, elem):
         return chr(round(elem))
