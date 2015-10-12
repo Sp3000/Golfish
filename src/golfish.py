@@ -637,7 +637,7 @@ class Golfish():
             if self._input:
                 c = self._input[0]
                 self._input = self._input[1:]
-                return c
+                return ord(c)
 
             else:
                 return EOF
