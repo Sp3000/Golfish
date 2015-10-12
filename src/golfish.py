@@ -9,7 +9,13 @@ Version: 0.3 (updated 12 Oct 2015)
 import codecs
 from collections import defaultdict
 import sys
-from getch import _Getch
+
+try:
+    from getch import _Getch
+    getch = _Getch()
+except ImportError:
+    # Fail silently, for online interpreter
+    pass
 
 from fractions import gcd
 from functools import reduce
@@ -30,8 +36,6 @@ MIRRORS = {"/": lambda x,y: (-y, -x),
 
 EOF = -1
 
-getch = _Getch()
-
 
 class HaltProgram(Exception):
     pass
@@ -41,8 +45,8 @@ class InvalidStateException(Exception):
     pass
 
 
-class Interpreter():
-    def __init__(self, code):
+class Golfish():
+    def __init__(self, code, input_=None, debug=False):
         rows = code.split("\n")
         self._board = defaultdict(lambda: defaultdict(int))
         x = y = 0
@@ -81,6 +85,36 @@ class Interpreter():
         self._variable_map = {}
         self._set_variable = False
 
+        self._input = input_
+        self._debug = debug
+
+        self._output = ""
+
+    def run(self):
+        try:
+            while True:
+                self.tick()
+
+        except HaltProgram:
+            pass
+        
+        except KeyboardInterrupt:    
+            print("^C", file=sys.stderr)
+
+        except Exception as e:
+            pos = self._pos
+            char = self._board[pos[1]][pos[0]]
+
+            print("something smells fishy... ", end="", file=sys.stderr)
+            
+            if char in range(32, 127):
+                print("(instruction {} '{}' at {},{})".format(char, chr(char), pos[0], pos[1]), file=sys.stderr)
+            else:
+                print("(instruction {} at {},{})".format(char, pos[0], pos[1]), file=sys.stderr)
+
+            # For debugging
+            if self._debug:
+                raise e
 
     def tick(self):
         self.move()
@@ -549,10 +583,6 @@ class Interpreter():
             elem = chr(self.pop())
             self.push(ord(elem.upper()))
 
-        elif instruction == "x":
-            elem = self.pop()
-            self.push(elem * random.random())
-
         else:
             raise NotImplementedError
 
@@ -585,22 +615,32 @@ class Interpreter():
 
 
     def read_char(self):
-        if self._input_buffer is not None:
-            char = self._input_buffer
-            self._input_buffer = None
-            return char
+        if self._input is None:
+            if self._input_buffer is not None:
+                char = self._input_buffer
+                self._input_buffer = None
+                return char
 
-        if sys.stdin.isatty():
-            # Console
-            char = getch()
+            if sys.stdin.isatty():
+                # Console
+                char = getch()
 
-            if ord(char) == 3:
-                raise KeyboardInterrupt
+                if ord(char) == 3:
+                    raise KeyboardInterrupt
+
+            else:
+                char = sys.stdin.read(1)
+
+            return ord(char) if char else EOF
 
         else:
-            char = sys.stdin.read(1)
+            if self._input:
+                c = self._input[0]
+                self._input = self._input[1:]
+                return c
 
-        return ord(char) if char else EOF
+            else:
+                return EOF
 
 
     def output(self, out):
@@ -638,39 +678,15 @@ if __name__ == "__main__":
         exit()
         
     filename = sys.argv[-1]
+    debug = (len(sys.argv) > 2 and "-d" in sys.argv[:-1])
 
     try:
         with open(filename) as infile:
-            interpreter = Interpreter(infile.read())
+            interpreter = Golfish(infile.read(), debug=debug)
 
     except UnicodeDecodeError:
         with codecs.open(filename, "r", "utf_8") as infile:
-            interpreter = Interpreter(infile.read())
+            interpreter = Golfish(infile.read(), debug=debug)
 
-    try:
-        while True:
-            interpreter.tick()
-
-    except HaltProgram:
-        pass
-    
-    except KeyboardInterrupt:    
-        print("^C", file=sys.stderr)
-
-    except Exception as e:
-        pos = interpreter._pos
-        char = interpreter._board[pos[1]][pos[0]]
-
-        print("something smells fishy... ", end="", file=sys.stderr)
-        
-        if char in range(32, 127):
-            print("(instruction {} '{}' at {},{})".format(char, chr(char), pos[0], pos[1]), file=sys.stderr)
-        else:
-            print("(instruction {} at {},{})".format(char, pos[0], pos[1]), file=sys.stderr)
-
-        # For debugging
-        if len(sys.argv) > 2 and "-d" in sys.argv[:-1]:
-            raise e
-
-    
+    interpreter.run()
 

@@ -2,8 +2,8 @@
 !        Trampoline: Skip 1
 "        String parsing
 #        4-way mirror
-$        Swap
-%        Mod
+$        Swap two
+%        Modulo (always nonnegative)
 S%       GCD
 &        Save to register/push from register
 '        String parsing
@@ -13,7 +13,7 @@ S%       GCD
 S*       Stack product
 +        Add
 S+       Stack sum
-,        Divide
+,        Floating point division
 S,       Integer division
 -        Subtract
 .        Pop y, x and jump to (x, y)
@@ -50,10 +50,12 @@ I        Numeric input: Read next int/float (note -1 could be input or EOF)
 J        
 K        Multiple copy: Pop n and copy the top n elements
 L        
+SL       Pop b,a and push log(a,b)
 M        Minus 1
 N        Output as num + trailing newline
 O        
 P        Plus 1
+SP       Primality test
 Q        Conditional: Pop n, then pop and execute next if truthy, else skip n
 R        
 S        Switch: Toggle next instruction
@@ -61,7 +63,7 @@ SS       Sine
 T        Set teleport pad
 ST       Tangent
 U        
-V        Variable
+V        Save to variable (determined by next char)
 W        
 X        Exponentiation
 Y        
@@ -88,7 +90,7 @@ Sl       Lowercase
 m        Push -1
 n        Output as num
 o        Output as char
-p        Pop y, x, char and put char at (x, y
+p        Pop y, x, char and put char at (x, y)
 q        Conditional: pop and execute next if truthy, else skip 2
 r        Reverse stack
 s        
@@ -104,4 +106,4 @@ z        Conditional: Pop and execute next if zero/falsy, else skip 1
 {        Shift stack left
 |        Mirror
 }        Shift stack right
-~        Pop
+~        Pop and discard
