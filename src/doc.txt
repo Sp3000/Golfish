@@ -1,0 +1,109 @@
+         NOP
+!        Trampoline: Skip 1
+"        String parsing
+#        4-way mirror
+$        Swap two
+%        Modulo (always nonnegative)
+S%       GCD
+&        Save to register/push from register
+'        String parsing
+(        Less than
+)        Greater than
+*        Multiply
+S*       Stack product
++        Add
+S+       Stack sum
+,        Floating point division
+S,       Integer division
+-        Subtract
+.        Pop y, x and jump to (x, y)
+/        Mirror
+0        Push 0
+1        Push 1
+2        Push 2
+S2       Push e
+3        Push 3
+S3       Push pi
+4        Push 4
+5        Push 5
+6        Push 6
+7        Push 7
+8        Push 8
+9        Push 9
+:        Duplicate
+;        Halt with no output
+<        Move left
+=        Equals
+>        Move right
+?        Conditional: pop and execute next if truthy, else skip 1
+@        Rotate 3, moving 3rd down to top
+A        
+B        
+C        
+SC       Cosine
+D        Debug
+E        
+F        
+G        
+H        Halt and output stack as string
+I        Numeric input: Read next int/float (note -1 could be input or EOF)
+J        
+K        Multiple copy: Pop n and copy the top n elements
+L        
+SL       Pop b,a and push log(a,b)
+M        Minus 1
+N        Output as num + trailing newline
+O        
+P        Plus 1
+SP       Primality test
+Q        Conditional: Pop n, then pop and execute next if truthy, else skip n
+R        
+S        Switch: Toggle next instruction
+SS       Sine
+T        Set teleport pad
+ST       Tangent
+U        
+V        Save to variable (determined by next char)
+W        
+X        Exponentiation
+Y        
+Z        Is zero: Push 1 if zero, else 0
+[        
+\        Mirror
+]        
+^        Move up
+_        Horizontal mirror
+`        Escape next to char
+a        Push 10
+b        Push 11
+c        Push 12
+d        Push 13
+e        Push 14
+f        Push 15
+g        Pop y, x and push char at (x, y)
+h        Halt and output top of stack as num
+i        Read char
+j        Conditional jump: pop cond, y, x and jump to (x, y) if cond
+k        Get nth element down (top is 0)
+l        Push length of stack
+Sl       Lowercase
+m        Push -1
+n        Output as num
+o        Output as char
+p        Pop y, x, char and put char at (x, y)
+q        Conditional: pop and execute next if truthy, else skip 2
+r        Reverse stack
+s        
+t        Teleport to last teleport pad
+u        
+Su       Uppercase
+v        Move down
+w        
+x        Random direction
+Sx       
+y        
+z        Conditional: Pop and execute next if zero/falsy, else skip 1
+{        Shift stack left
+|        Mirror
+}        Shift stack right
+~        Pop and discard
