@@ -313,11 +313,14 @@ class Interpreter():
             dots = 0
             char = self.read_char()
 
-            while char >= 0 and chr(char) not in "0123456789.":
+            while char >= 0 and chr(char) not in "-0123456789.":
                 char = self.read_char()
 
-            while char >= 0 and chr(char) in "0123456789.":
+            while char >= 0 and chr(char) in "-0123456789.":
                 if char == ord(".") and dots > 0:
+                    break
+
+                if char == ord("-") and num:
                     break
 
                 num += chr(char)

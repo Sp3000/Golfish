@@ -46,7 +46,7 @@ E
 F        
 G        
 H        Halt and output stack as string
-I        Numeric input: Read next int/float
+I        Numeric input: Read next int/float (note -1 could be input or EOF)
 J        
 K        Multiple copy: Pop n and copy the top n elements
 L        
