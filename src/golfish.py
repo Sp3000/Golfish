@@ -23,6 +23,8 @@ import math
 import operator
 import random
 
+from library import *
+
 DIGITS = "0123456789abcdef"
 
 DIRECTIONS = {"^": (0, -1),
@@ -348,8 +350,7 @@ class Golfish():
             self.output(str(self._curr_stack) + "\n")
         
         elif instruction == "H":
-            while self._curr_stack:
-                elem = self.pop()
+            for elem in self._curr_stack:
                 self.output_as_char(elem)
 
             self.halt()
