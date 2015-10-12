@@ -75,7 +75,7 @@ class Golfish():
         self._push_char = False # `
 
         self._escape = False
-        self._array_parse = False
+        self._string_parse = False
         self._parse_char = None # ' or "
         self._parse_buffer = []
 
@@ -174,7 +174,7 @@ class Golfish():
             self.push(self._variable_map[instruction])
             return
 
-        if self._array_parse:
+        if self._string_parse:
             if self._escape:
                 escapes = {"`": ord("`"), "n": ord("\n"), "r": ord("\r")}
                 escapes.update({self._parse_char: ord(self._parse_char)})
@@ -190,8 +190,8 @@ class Golfish():
 
             else:
                 if instruction == self._parse_char:
-                    self._array_parse = False
-                    self.push(self._parse_buffer)
+                    self._string_parse = False
+                    self._curr_stack.extend(self._parse_buffer)
                     self._parse_buffer = []
 
                 elif instruction == '`':
@@ -243,7 +243,7 @@ class Golfish():
             self._skip = 1
 
         elif instruction in '"\'':
-            self._array_parse = True
+            self._string_parse = True
             self._parse_char = instruction
 
         elif instruction == "$":
