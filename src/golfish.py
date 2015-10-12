@@ -46,7 +46,7 @@ class InvalidStateException(Exception):
 
 
 class Golfish():
-    def __init__(self, code, input_=None, debug=False):
+    def __init__(self, code, input_=None, debug=False, online=False):
         rows = code.split("\n")
         self._board = defaultdict(lambda: defaultdict(int))
         x = y = 0
@@ -88,7 +88,8 @@ class Golfish():
         self._input = input_
         self._debug = debug
 
-        self._output = ""
+        self._online = online
+        self._error_out = sys.stdout if online else sys.stderr
 
     def run(self):
         try:
@@ -105,16 +106,19 @@ class Golfish():
             pos = self._pos
             char = self._board[pos[1]][pos[0]]
 
-            print("something smells fishy... ", end="", file=sys.stderr)
+            print("something smells fishy... ", end="", file=self._error_out)
             
             if char in range(32, 127):
-                print("(instruction {} '{}' at {},{})".format(char, chr(char), pos[0], pos[1]), file=sys.stderr)
+                print("(instruction {} '{}' at {},{})".format(char, chr(char), pos[0], pos[1]), file=self._error_out)
             else:
-                print("(instruction {} at {},{})".format(char, pos[0], pos[1]), file=sys.stderr)
+                print("(instruction {} at {},{})".format(char, pos[0], pos[1]), file=self._error_out)
 
             # For debugging
             if self._debug:
-                raise e
+                if online:
+                    print(e)
+                else:
+                    raise e
 
     def tick(self):
         self.move()
