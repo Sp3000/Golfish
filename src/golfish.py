@@ -335,14 +335,6 @@ class Interpreter():
             else:
                 self.push(-1)
 
-        elif instruction == "J":
-            y = self.pop()
-            x = self.pop()
-            condition = self.pop()
-
-            if condition:
-                self._pos = [x, y]
-
         elif instruction == "K":
             elem = self.pop()
             popped = [self.pop() for _ in range(elem)][::-1]
@@ -406,6 +398,14 @@ class Interpreter():
 
         elif instruction == "i":
             self.push(self.read_char())
+
+        elif instruction == "j":
+            y = self.pop()
+            x = self.pop()
+            condition = self.pop()
+
+            if condition:
+                self._pos = [x, y]
 
         elif instruction == "k":
             elem = self.pop()

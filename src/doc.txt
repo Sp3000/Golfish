@@ -81,7 +81,7 @@ f        Push 15
 g        Pop y, x and push char at (x, y)
 h        Halt and output top of stack as num
 i        Read char
-j        
+j        Conditional jump: pop cond, y, x and jump to (x, y) if cond
 k        Get nth element down (top is 0)
 l        Push length of stack
 Sl       Lowercase
