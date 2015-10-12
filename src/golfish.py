@@ -22,6 +22,12 @@ from functools import reduce
 import math
 import operator
 import random
+import traceback
+
+try:
+    from library import *
+except ImportError:
+    from .library import *
 
 DIGITS = "0123456789abcdef"
 
@@ -75,7 +81,7 @@ class Golfish():
         self._push_char = False # `
 
         self._escape = False
-        self._array_parse = False
+        self._string_parse = False
         self._parse_char = None # ' or "
         self._parse_buffer = []
 
@@ -125,7 +131,7 @@ class Golfish():
             # For debugging
             if self._debug:
                 if self._online:
-                    print(e)
+                    traceback.print_exc(file=sys.stdout)
                 else:
                     raise e
 
@@ -174,7 +180,7 @@ class Golfish():
             self.push(self._variable_map[instruction])
             return
 
-        if self._array_parse:
+        if self._string_parse:
             if self._escape:
                 escapes = {"`": ord("`"), "n": ord("\n"), "r": ord("\r")}
                 escapes.update({self._parse_char: ord(self._parse_char)})
@@ -190,8 +196,8 @@ class Golfish():
 
             else:
                 if instruction == self._parse_char:
-                    self._array_parse = False
-                    self.push(self._parse_buffer)
+                    self._string_parse = False
+                    self._curr_stack.extend(self._parse_buffer)
                     self._parse_buffer = []
 
                 elif instruction == '`':
@@ -243,7 +249,7 @@ class Golfish():
             self._skip = 1
 
         elif instruction in '"\'':
-            self._array_parse = True
+            self._string_parse = True
             self._parse_char = instruction
 
         elif instruction == "$":
@@ -348,8 +354,7 @@ class Golfish():
             self.output(str(self._curr_stack) + "\n")
         
         elif instruction == "H":
-            while self._curr_stack:
-                elem = self.pop()
+            for elem in self._curr_stack:
                 self.output_as_char(elem)
 
             self.halt()
