@@ -1,5 +1,4 @@
          NOP
-         NOP
 !        Trampoline: Skip 1
 "        String parsing
 #        4-way mirror
@@ -80,7 +79,7 @@ d        Push 13
 e        Push 14
 f        Push 15
 g        Pop y, x and push char at (x, y)
-h        Halt and output stack as space-separated nums
+h        Halt and output top of stack as num
 i        Read char
 j        
 k        

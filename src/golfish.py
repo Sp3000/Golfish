@@ -189,6 +189,9 @@ class Interpreter():
         elif instruction in DIGITS:
             self.push(DIGITS.index(instruction))
 
+        elif instruction == " ":
+            pass
+
         elif instruction == "!":
             self._skip = 1
 
@@ -299,7 +302,8 @@ class Interpreter():
             self.output(str(self._curr_stack) + "\n")
         
         elif instruction == "H":
-            for elem in self._curr_stack:
+            while self._curr_stack:
+                elem = self.pop()
                 self.output_as_char(elem)
 
             self.halt()
