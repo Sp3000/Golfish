@@ -23,7 +23,10 @@ import math
 import operator
 import random
 
-from library import *
+try:
+    from library import *
+except ImportError:
+    from .library import *
 
 DIGITS = "0123456789abcdef"
 
