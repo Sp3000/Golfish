@@ -9,6 +9,7 @@ Version: 0.3 (updated 12 Oct 2015)
 import codecs
 from collections import defaultdict
 import sys
+import traceback
 
 try:
     from getch import _Getch
@@ -100,7 +101,7 @@ class Golfish():
             pass
         
         except KeyboardInterrupt:    
-            print("^C", file=sys.stderr)
+            print("^C", file=self._error_out)
 
         except Exception as e:
             pos = self._pos
@@ -115,8 +116,8 @@ class Golfish():
 
             # For debugging
             if self._debug:
-                if online:
-                    print(e)
+                if self._online:
+                    traceback.print_exc(file=self._error_out)
                 else:
                     raise e
 

@@ -1,0 +1,227 @@
+{% load staticfiles %}
+
+<html>
+<head>
+    <title>Gol&gt;&lt;&gt; Online Interpreter</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'golfish/style.css' %}">
+    <link rel="icon" href="{% static 'golfish/golfish.png' %}" />
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script type="text/javascript">
+    function encode(str) {
+        var output = "";
+        var escaped = encodeURIComponent(str);
+        
+        for (var i = 0; i < escaped.length; i++) {
+            if ("~!*()".indexOf(escaped[i]) > -1) {
+                output += "%" + escaped[i].charCodeAt().toString(16);
+            } else {
+                output += escaped[i];
+            }
+        }
+        
+        return output;
+    };
+    
+    function permalink() {
+        var s = "https://golfish.herokuapp.com/?code=";
+        s += encode($("#code").val());
+        s += "&input=";
+        s += encode($("#input").val());
+        s += "&debug=";
+        s += encode($("#debug").val());
+        prompt("Permalink", s);
+    };
+    </script>
+    
+</head>
+<body>
+    <div id="container">
+        <h1 style="margin-bottom: 2px"><a href="https://github.com/Sp3000/Golfish/wiki" style="text-decoration: none">Gol&gt;&lt;&gt;</a> Online Interpreter</h1>
+        <p style="font-size: 12px; margin-top: 0px"><i>Note: Gol><> is still evolving, so some behaviours/syntax may change in future updates</i></p>
+        
+        <div id="col_left">
+            
+            {% if output != None %}
+            <p>Output:</p>
+            <div id="output_container" class="verbatim">
+            <pre>{{ output | default_if_none:""}}</pre>
+            </div><br>
+            {% endif %}
+            
+            <form method="post" id="golfish_input">
+                {% csrf_token %}
+                <textarea id="code" name="code" placeholder="Code" rows=7>{{ code | default_if_none:""}}</textarea><br><br>
+                <textarea id="input" name="input" placeholder="Input" rows=7>{{ input_ | default_if_none:""}}</textarea><br><br>                
+                <input type="checkbox" name="debug" value="Debug">Show full error<br><br><br>
+                <input type="submit" value="Run" class="btn">
+                <input type="button" onclick="permalink()" value="Permalink" class="btn">
+                <input type="hidden" name="submitted" value="true">
+                <div style="float:right" id="byte_count"></div>
+            </form>
+        </div>
+        
+        <div id="col_right">
+        <nav id="navbar">
+            <a href="#" id="r1">Movement, control flow and literals</a> | 
+            <a href="#" id="r2">Halting, I/O and stack manipulation</a> |
+            <a href="#" id="r3">Mathematical operators</a>
+            <a href="#" id="r4">Miscellaneous</a>
+        </nav>
+        
+        <div id="p_r1" class="minipage pactive">
+            <h3>Movement</h3>
+            
+            <div class="verbatim">
+            <pre>
+&lt;space&gt;     NOP
+&lt;^&gt;v        Set IP direction  
+#|_/\       Mirrors
+.           Pop y, x and jump to (x, y)
+j           Conditional jump: pop cond, y, x and jump to (x, y) if cond
+Tt          Set teleport pad / Teleport to last teleport pad
+x           Random direction
+            </pre>
+            </div>
+
+            <h3>Control flow</h3>
+            <div class="verbatim">
+            <pre>
+!           Trampoline: Skip 1
+?           Pop and execute next if truthy, else skip 1
+Q           Pop n, then pop and execute next if truthy, else skip n
+q           Pop and execute next if truthy, else skip 2
+z           Pop and execute next if zero/falsy, else skip 1
+            </pre>
+            </div>
+            
+            <h3>Literals</h3>
+            <div class="verbatim">
+            <pre>
+"'          String parsing
+0-9         Push 0-9 respectively
+a-f         Push 10-15 respectively
+l           Push length of stack
+m           Push -1
+`           Escape next to char
+            </pre>
+            </div>
+        </div>
+        
+        <div id="p_r2" class="minipage">
+            <h3>Halting</h3>
+            <div class="verbatim">
+            <pre>
+;           Halt with no output
+H           Halt and output stack as string
+h           Halt and output top of stack as num
+            </pre>
+            </div>
+            
+            <h3>I/O</h3>
+            <div class="verbatim">
+            <pre>
+I           Numeric input: Read next int/float (note -1 could be input or EOF)
+i           Read char
+
+N           Output as num + trailing newline
+n           Output as num
+o           Output as char
+            </pre>
+            </div>
+            
+            <h3>Stack manipulation</h3>
+            <div class="verbatim">
+            <pre>
+$           Swap two
+:           Duplicate
+@           Rotate 3, moving 3rd down to top
+K           Multiple copy: Pop n and copy the top n elements
+k           Get nth element down (top is 0)
+r           Reverse stack
+{}          Shift stack left/right
+~           Pop and discard
+            </pre>
+            </div>
+        </div>
+        
+        <div id="p_r3" class="minipage">
+            <h3>Basic mathematical operators</h3>
+            
+            <p>Note: S is a switch that toggles the next operator's functionality.</p>
+            
+            <div class="verbatim">
+            <pre>
++-*         Addition/subtraction/multiplication respectively
+%           Modulo (always nonnegative)
+,           Floating point division
+S,          Integer division
+(=)         Less than/equals/greater than respectively
+M           Minus 1
+X           Exponentiation
+P           Plus 1
+Z           Is zero: Push 1 if zero, else 0
+            </pre>
+            </div>
+            
+            <h3>Other mathematical operators</h3>
+            <div class="verbatim">
+            <pre>
+S%           GCD
+S*           Stack product
+S+           Stack sum
+S2           Push e
+S3           Push pi
+SC           Cosine
+SL           Pop b,a and push log(a,b)
+SP           Primality test
+SS           Sine
+ST           Tangent
+            </pre>
+            </div>
+            
+            <p>Note: The online interpreter uses a basic Miller-Rabin implementation for primality testing. To be improved later</p>
+        </div>
+        
+        <div id="p_r4" class="minipage">
+            <h3>Miscellaneous operators</h3>
+            <div class="verbatim">
+            <pre>
+&           Save to register/push from register
+D           Debug
+S           Switch: Toggle next instruction
+V           Save to variable (determined by next char)
+g           Pop y, x and push char at (x, y)
+p           Pop y, x, char and put char at (x, y)
+Sl          Lowercase
+Su          Uppercase
+            </pre>
+        </div>
+        </div>
+        
+        <script>
+        $("#p_r1").show();
+        
+        $("#navbar").children("a").click(function(){
+            $(".pactive").hide();
+            $(".pactive").removeClass("pactive");
+            $("#p_" + this.id).addClass("pactive");
+            $(".pactive").show();
+        });
+        </script>
+        
+        <script>
+        function update_byte_count() {
+            var code_length = $("#code").val().length;
+            $("#byte_count").text(code_length.toString() + " char(s)");
+        }
+        
+        update_byte_count()
+        
+        $(function(){
+            $("#code").on("input propertychange", update_byte_count);
+            $("#byte_count").on("click", function(){ $(this).css('color', '#AAAAAA'); $(this).css('cursor', 'default'); })
+        });
+        </script>
+    </div>
+</body>
+</html>
