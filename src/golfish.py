@@ -9,7 +9,6 @@ Version: 0.3 (updated 12 Oct 2015)
 import codecs
 from collections import defaultdict
 import sys
-import traceback
 
 try:
     from getch import _Getch
@@ -90,7 +89,6 @@ class Golfish():
         self._debug = debug
 
         self._online = online
-        self._error_out = sys.stdout if online else sys.stderr
 
     def run(self):
         try:
@@ -101,23 +99,33 @@ class Golfish():
             pass
         
         except KeyboardInterrupt:    
-            print("^C", file=self._error_out)
+            print("^C", file=sys.stderr)
 
         except Exception as e:
             pos = self._pos
             char = self._board[pos[1]][pos[0]]
 
-            print("something smells fishy... ", end="", file=self._error_out)
-            
-            if char in range(32, 127):
-                print("(instruction {} '{}' at {},{})".format(char, chr(char), pos[0], pos[1]), file=self._error_out)
+            # Can't assign file = stdout if online else stderr for some reason
+            if self._online:
+                print("something smells fishy... ", end="")
+
+                if char in range(32, 127):
+                    print("(instruction {} '{}' at {},{})".format(char, chr(char), pos[0], pos[1]))
+                else:
+                    print("(instruction {} at {},{})".format(char, pos[0], pos[1]))
+                    
             else:
-                print("(instruction {} at {},{})".format(char, pos[0], pos[1]), file=self._error_out)
+                print("something smells fishy... ", end="", file=self._error_out)
+                
+                if char in range(32, 127):
+                    print("(instruction {} '{}' at {},{})".format(char, chr(char), pos[0], pos[1]), file=self._error_out)
+                else:
+                    print("(instruction {} at {},{})".format(char, pos[0], pos[1]), file=self._error_out)       
 
             # For debugging
             if self._debug:
                 if self._online:
-                    traceback.print_exc(file=self._error_out)
+                    print(e)
                 else:
                     raise e
 
