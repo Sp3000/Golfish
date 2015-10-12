@@ -22,6 +22,7 @@ from functools import reduce
 import math
 import operator
 import random
+import traceback
 
 try:
     from library import *
@@ -130,7 +131,7 @@ class Golfish():
             # For debugging
             if self._debug:
                 if self._online:
-                    print(e)
+                    traceback.print_exc(file=sys.stdout)
                 else:
                     raise e
 
