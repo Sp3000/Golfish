@@ -61,7 +61,7 @@ SS       Sine
 T        Set teleport pad
 ST       Tangent
 U        
-V        
+V        Variable
 W        
 X        Exponentiation
 Y        
@@ -82,10 +82,10 @@ g        Pop y, x and push char at (x, y)
 h        Halt and output top of stack as num
 i        Read char
 j        
-k        
+k        Get nth element down (top is 0)
 l        Push length of stack
 Sl       Lowercase
-m        
+m        Push -1
 n        Output as num
 o        Output as char
 p        Pop y, x, char and put char at (x, y

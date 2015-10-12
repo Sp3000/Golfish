@@ -117,7 +117,7 @@ class Interpreter():
 
         if self._set_variable == True:
             elem = self.pop()
-            self._variable_map[instruction] = deepcopy(elem)
+            self._variable_map[instruction] = elem
             self.push(elem)
             
             self._set_variable = False
@@ -210,8 +210,7 @@ class Interpreter():
             elem2 = self.pop()
             elem1 = self.pop()
 
-            if self.is_num(elem1) and self.is_num(elem2):
-                self.push(elem1 % elem2)
+            self.push(elem1 % elem2)
 
         elif instruction == "&":
             if self._register_stack[-1] is None:
@@ -346,18 +345,14 @@ class Interpreter():
 
         elif instruction == "K":
             elem = self.pop()
+            popped = [self.pop() for _ in range(elem)][::-1]
 
-            if self.is_num(elem):
-                popped = [self.pop() for _ in range(elem)][::-1]
-
-                self._curr_stack.extend(popped)
-                self._curr_stack.extend(deepcopy(popped))
+            self._curr_stack.extend(popped)
+            self._curr_stack.extend(popped)
 
         elif instruction == "M":
             elem = self.pop()
-
-            if self.is_num(elem):
-                self.push(elem - 1)
+            self.push(elem - 1)
 
         elif instruction == "N":
             self.output_as_num(self.pop())
@@ -365,9 +360,7 @@ class Interpreter():
 
         elif instruction == "P":
             elem = self.pop()
-
-            if self.is_num(elem):
-                self.push(elem + 1)
+            self.push(elem + 1)
 
         elif instruction == "Q":
             skip = self.pop()
@@ -416,9 +409,7 @@ class Interpreter():
 
         elif instruction == "k":
             elem = self.pop()
-
-            if self.is_num(elem):
-                self.push(deepcopy(self._curr_stack[~elem]))
+            self.push(self._curr_stack[~elem])
 
         elif instruction == "l":
             self.push(len(self._curr_stack))
@@ -437,26 +428,10 @@ class Interpreter():
             elem2 = self.pop()
             elem1 = self.pop()
 
-            if self.is_num(elem2) and self.is_num(elem3):
-                y = elem3
-                x = elem2
-                char = elem1
-
-                if self.is_num(char):
-                    self._board[y][x] = char
-
-                elif self.is_array(char):
-                    curr_y = y
-                    curr_x = x
-
-                    for c in char:
-                        if c in [10, 13]:
-                            curr_y += 1
-                            curr_x = x
-
-                        else:
-                            self._board[curr_y][curr_x] = c
-                            curr_x += 1                    
+            y = elem3
+            x = elem2
+            char = elem1
+            self._board[y][x] = char                  
                     
         elif instruction == "q":
             cond = self.pop()
@@ -556,9 +531,7 @@ class Interpreter():
 
         elif instruction == "P":
             elem = self.pop()
-
-            if self.is_num(elem):
-                self.push(1 if is_probably_prime(elem) else 0)
+            self.push(1 if is_probably_prime(elem) else 0)
 
         elif instruction == "S":
             elem = self.pop()
