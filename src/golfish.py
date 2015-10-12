@@ -296,11 +296,8 @@ class Interpreter():
             self.push(elem1)
 
         elif instruction == "D":
-            elem2 = self.pop()
-            elem1 = self.pop()
-
-            self.push(int(elem1 // elem2))
-
+            self.output(str(self._curr_stack) + "\n")
+        
         elif instruction == "H":
             for elem in self._curr_stack:
                 self.output_as_char(elem)
@@ -523,11 +520,17 @@ class Interpreter():
 
             self.push(gcd(elem1, elem2))
 
+        elif instruction == "*":
+            self._curr_stack = [reduce(operator.mul, self._curr_stack, 1)]
+
         elif instruction == "+":
             self._curr_stack = [sum(self._curr_stack)]
 
-        elif instruction == "*":
-            self._curr_stack = [reduce(operator.mul, self._curr_stack, 1)]
+        elif instruction == ",":
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            self.push(int(elem1 // elem2))
 
         elif instruction == "2":
             self.push(math.e)

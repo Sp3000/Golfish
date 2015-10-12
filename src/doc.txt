@@ -15,6 +15,7 @@ S*       Stack product
 +        Add
 S+       Stack sum
 ,        Divide
+S,       Integer division
 -        Subtract
 .        Pop y, x and jump to (x, y)
 /        Mirror
@@ -41,7 +42,7 @@ A
 B        
 C        
 SC       Cosine
-D        Integer division
+D        Debug
 E        
 F        
 G        
@@ -88,7 +89,7 @@ Sl       Lowercase
 m        
 n        Output as num
 o        Output as char
-p        Pop y, x, char and put char at (x, y)
+p        Pop y, x, char and put char at (x, y
 q        Conditional: pop and execute next if truthy, else skip 2
 r        Reverse stack
 s        
