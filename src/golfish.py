@@ -122,12 +122,12 @@ class Golfish():
                     print("(instruction {} at {},{})".format(char, pos[0], pos[1]))
                     
             else:
-                print("something smells fishy... ", end="", file=self._error_out)
+                print("something smells fishy... ", end="", file=sys.stderr)
                 
                 if char in range(32, 127):
-                    print("(instruction {} '{}' at {},{})".format(char, chr(char), pos[0], pos[1]), file=self._error_out)
+                    print("(instruction {} '{}' at {},{})".format(char, chr(char), pos[0], pos[1]), file=sys.stderr)
                 else:
-                    print("(instruction {} at {},{})".format(char, pos[0], pos[1]), file=self._error_out)       
+                    print("(instruction {} at {},{})".format(char, pos[0], pos[1]), file=sys.stderr)       
 
             # For debugging
             if self._debug:
@@ -172,7 +172,6 @@ class Golfish():
         if self._set_variable == True:
             elem = self.pop()
             self._variable_map[instruction] = elem
-            self.push(elem)
             
             self._set_variable = False
             return
@@ -516,7 +515,6 @@ class Golfish():
 
         elif instruction == "z":
             condition = self.pop()
-            self.push(condition)
 
             if condition:
                 self._skip = 1
