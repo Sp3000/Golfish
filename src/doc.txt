@@ -8,7 +8,9 @@ S%       GCD
 &        Save to register/push from register
 '        String parsing
 (        Less than
+S(       Floor
 )        Greater than
+S)       Ceil
 *        Multiply
 S*       Stack product
 +        Add
@@ -34,6 +36,7 @@ S3       Push pi
 ;        Halt with no output
 <        Move left
 =        Equals
+S=       Round
 >        Move right
 ?        Conditional: pop and execute next if truthy, else skip 1
 @        Rotate 3, moving 3rd down to top
@@ -48,7 +51,7 @@ G
 H        Halt and output stack as string
 I        Numeric input: Read next non-negative int/float. Push -1 on EOF.
 SI       Numeric input: Read next int/float (possible negative). Change direction to down on EOF.
-J        
+J        Conditional jump: pop cond, y, x and jump to (x, y) if cond
 K        Multiple copy: Pop n and copy the top n elements
 L        
 SL       Pop b,a and push log(a,b)
@@ -58,7 +61,7 @@ O
 P        Plus 1
 SP       Primality test
 Q        Conditional: Pop n, then pop and execute next if truthy, else skip n
-R        
+R        Pop n, repeat next instruction n times (experimental)
 S        Switch: Toggle next instruction
 SS       Sine
 T        Set teleport pad
@@ -67,8 +70,9 @@ U
 V        Save to variable (determined by next char)
 W        
 X        Exponentiation
+SX       Push random float in [0, 1)
 Y        
-Z        Is zero: Push 1 if zero, else 0
+Z        Conditional: Pop and execute next if zero/falsy, else skip 1
 [        Pop n. Move one stack left, taking the top n elements with you.
 \        Mirror
 ]        Pop n. Move one stack right, taking the top n elements with you.
@@ -84,7 +88,7 @@ f        Push 15
 g        Pop y, x and push char at (x, y)
 h        Halt and output top of stack as num
 i        Read char
-j        Conditional jump: pop cond, y, x and jump to (x, y) if cond
+j
 k        Get nth element down (top is 0)
 l        Push length of stack
 Sl       Lowercase
@@ -103,7 +107,7 @@ w
 x        Random direction
 Sx       
 y        
-z        Conditional: Pop and execute next if zero/falsy, else skip 1
+z        Is zero: Push 1 if zero, else 0
 {        Shift stack left
 |        Mirror
 }        Shift stack right

@@ -97,7 +97,9 @@ class Golfish():
 
         self._online = online
 
-    def run(self):
+        self._R_repeat = 1
+
+    def run(self):        
         try:
             while True:
                 self.tick()
@@ -105,8 +107,14 @@ class Golfish():
         except HaltProgram:
             pass
         
-        except KeyboardInterrupt:    
+        except KeyboardInterrupt as e:    
             print("^C", file=sys.stderr)
+
+            if self._debug:
+                if self._online:
+                    traceback.print_exc(file=sys.stdout)
+                else:
+                    raise e
 
         except Exception as e:
             pos = self._pos
@@ -117,7 +125,7 @@ class Golfish():
                 print("something smells fishy... ", end="")
 
                 if char in range(32, 127):
-                    print("(instruction {} '{}' at {},{})".format(char, chr(char), pos[0], pos[1]))
+                    print("(instruction {} '{}' at {},{})".format(char, "S"*self._toggled + chr(char), pos[0], pos[1]))
                 else:
                     print("(instruction {} at {},{})".format(char, pos[0], pos[1]))
                     
@@ -125,11 +133,10 @@ class Golfish():
                 print("something smells fishy... ", end="", file=sys.stderr)
                 
                 if char in range(32, 127):
-                    print("(instruction {} '{}' at {},{})".format(char, chr(char), pos[0], pos[1]), file=sys.stderr)
+                    print("(instruction {} '{}' at {},{})".format(char, "S"*self._toggled + chr(char), pos[0], pos[1]), file=sys.stderr)
                 else:
                     print("(instruction {} at {},{})".format(char, pos[0], pos[1]), file=sys.stderr)       
 
-            # For debugging
             if self._debug:
                 if self._online:
                     traceback.print_exc(file=sys.stdout)
@@ -224,13 +231,18 @@ class Golfish():
 
         elif self._skip < 0:
             self._skip = 0
+
+        tmp_R_repeat, self._R_repeat = self._R_repeat, 1
         
         if self._toggled:
-            self.handle_switched_instruction(instruction)
+            for _ in range(int(tmp_R_repeat)):
+                self.handle_switched_instruction(instruction)
+                
             self._toggled = False
 
         else:
-            self.handle_normal_instruction(instruction)
+            for _ in range(int(tmp_R_repeat)):
+                self.handle_normal_instruction(instruction)
 
     def handle_normal_instruction(self, instruction):
         if instruction in DIRECTIONS:
@@ -249,7 +261,7 @@ class Golfish():
             self._skip = 1
 
         elif instruction in '"\'':
-            self._string_parse = True
+            self._string_parse = not self._string_parse
             self._parse_char = instruction
 
         elif instruction == "$":
@@ -351,7 +363,7 @@ class Golfish():
             self.push(elem1)
 
         elif instruction == "D":
-            self.output(str(self._curr_stack) + "\n")
+            self.output(str(self._curr_stack).replace(",", "") + "\n")
 
         elif instruction == "E":
             elem = self.pop()
@@ -391,6 +403,14 @@ class Golfish():
             else:
                 self.push(-1)
 
+        elif instruction == "J":
+            y = self.pop()
+            x = self.pop()
+            condition = self.pop()
+
+            if condition:
+                self._pos = [x, y]
+
         elif instruction == "K":
             elem = self.pop()
             popped = [self.pop() for _ in range(elem)][::-1]
@@ -417,6 +437,10 @@ class Golfish():
             if not cond:
                 self._skip = max(0, skip)
 
+        elif instruction == "R":
+            elem = self.pop()
+            self._R_repeat = elem
+
         elif instruction == "S":
             raise InvalidStateException # Shouldn't reach here
 
@@ -438,8 +462,10 @@ class Golfish():
             self.push(result)
 
         elif instruction == "Z":
-            elem = self.pop()
-            self.push(0 if elem else 1)
+            condition = self.pop()
+
+            if condition:
+                self._skip = 1
 
         elif instruction == "`":
             self._push_char = True
@@ -459,14 +485,6 @@ class Golfish():
 
         elif instruction == "i":
             self.push(self.read_char())
-
-        elif instruction == "j":
-            y = self.pop()
-            x = self.pop()
-            condition = self.pop()
-
-            if condition:
-                self._pos = [x, y]
 
         elif instruction == "k":
             elem = self.pop()
@@ -511,10 +529,8 @@ class Golfish():
             self._dir = random.choice(list(DIRECTIONS.values()))
 
         elif instruction == "z":
-            condition = self.pop()
-
-            if condition:
-                self._skip = 1
+            elem = self.pop()
+            self.push(0 if elem else 1)
 
         elif instruction in "[]":
             elem = self.pop()
@@ -547,6 +563,14 @@ class Golfish():
 
             self.push(gcd(elem1, elem2))
 
+        elif instruction == "(":
+            elem = self.pop()
+            self.push(math.floor(elem))
+
+        elif instruction == ")":
+            elem = self.pop()
+            self.push(math.ceil(elem))
+
         elif instruction == "*":
             self._curr_stack = [reduce(operator.mul, self._curr_stack, 1)]
 
@@ -564,6 +588,10 @@ class Golfish():
 
         elif instruction == "3":
             self.push(math.pi)
+
+        elif instruction == "=":
+            elem = self.pop()
+            self.push(round(elem))
 
         elif instruction == "C":
             elem = self.pop()
@@ -613,6 +641,9 @@ class Golfish():
         elif instruction == "T":
             elem = self.pop()
             self.push(math.tan(elem))
+
+        elif instruction == "X":
+            self.push(random.random())
 
         elif instruction == "l":
             elem = chr(self.pop())
