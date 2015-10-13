@@ -261,7 +261,7 @@ class Golfish():
             self._skip = 1
 
         elif instruction in '"\'':
-            self._string_parse = True
+            self._string_parse = not self._string_parse
             self._parse_char = instruction
 
         elif instruction == "$":
