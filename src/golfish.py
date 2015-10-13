@@ -403,6 +403,14 @@ class Golfish():
             else:
                 self.push(-1)
 
+        elif instruction == "J":
+            y = self.pop()
+            x = self.pop()
+            condition = self.pop()
+
+            if condition:
+                self._pos = [x, y]
+
         elif instruction == "K":
             elem = self.pop()
             popped = [self.pop() for _ in range(elem)][::-1]
@@ -454,8 +462,10 @@ class Golfish():
             self.push(result)
 
         elif instruction == "Z":
-            elem = self.pop()
-            self.push(0 if elem else 1)
+            condition = self.pop()
+
+            if condition:
+                self._skip = 1
 
         elif instruction == "`":
             self._push_char = True
@@ -475,14 +485,6 @@ class Golfish():
 
         elif instruction == "i":
             self.push(self.read_char())
-
-        elif instruction == "j":
-            y = self.pop()
-            x = self.pop()
-            condition = self.pop()
-
-            if condition:
-                self._pos = [x, y]
 
         elif instruction == "k":
             elem = self.pop()
@@ -527,10 +529,8 @@ class Golfish():
             self._dir = random.choice(list(DIRECTIONS.values()))
 
         elif instruction == "z":
-            condition = self.pop()
-
-            if condition:
-                self._skip = 1
+            elem = self.pop()
+            self.push(0 if elem else 1)
 
         elif instruction in "[]":
             elem = self.pop()
