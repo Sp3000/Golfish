@@ -12,9 +12,7 @@ S(       Floor
 )        Greater than
 S)       Ceil
 *        Multiply
-S*       Stack product
 +        Add
-S+       Stack sum
 ,        Floating point division
 S,       Integer division
 -        Subtract

@@ -575,12 +575,6 @@ class Golfish():
             elem = self.pop()
             self.push(math.ceil(elem))
 
-        elif instruction == "*":
-            self._curr_stack = [reduce(operator.mul, self._curr_stack, 1)]
-
-        elif instruction == "+":
-            self._curr_stack = [sum(self._curr_stack)]
-
         elif instruction == ",":
             elem2 = self.pop()
             elem1 = self.pop()
