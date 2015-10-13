@@ -184,10 +184,18 @@ class Golfish():
             return
 
         if instruction in self._variable_map:
-            self.push(self._variable_map[instruction])
+            for _ in range(self._R_repeat):
+                self.push(self._variable_map[instruction])
+
+            self._R_repeat = 1
             return
 
-        if self._string_parse:
+        if not self._string_parse and instruction in "'\"":
+            self._string_parse = True
+            self._parse_char = instruction
+            return
+
+        elif self._string_parse:
             if self._escape:
                 escapes = {"`": ord("`"), "n": ord("\n"), "r": ord("\r")}
                 escapes.update({self._parse_char: ord(self._parse_char)})
@@ -200,23 +208,33 @@ class Golfish():
                     self._parse_buffer.append(char)
 
                 self._escape = False
+        
+            elif instruction == self._parse_char:
+                for _ in range(self._R_repeat):
+                    self._curr_stack.extend(self._parse_buffer)
+
+                self._R_repeat = 1
+                self._string_parse = False
 
             else:
-                if instruction == self._parse_char:
-                    self._string_parse = False
-                    self._curr_stack.extend(self._parse_buffer)
-                    self._parse_buffer = []
-
-                elif instruction == '`':
+                if instruction == '`':
                     self._escape = True
-
                 else:
                     self._parse_buffer.append(char)
 
             return
+
+        if instruction == "`":
+            self._push_char = True
+            return
+
+        tmp_R_repeat, self._R_repeat = self._R_repeat, 1
             
         if self._push_char:
-            self.push(char)
+            for _ in range(int(tmp_R_repeat)):
+                self.push(char)
+
+            self._R_repeat = 1
             self._push_char = False
             return
 
@@ -235,18 +253,17 @@ class Golfish():
 
         elif self._skip < 0:
             self._skip = 0
-
-        tmp_R_repeat, self._R_repeat = self._R_repeat, 1
         
         if self._toggled:
             for _ in range(int(tmp_R_repeat)):
                 self.handle_switched_instruction(instruction)
-                
-            self._toggled = False
 
         else:
             for _ in range(int(tmp_R_repeat)):
                 self.handle_normal_instruction(instruction)
+
+        self._toggled = False
+        self._parse_buffer = []
 
     def handle_normal_instruction(self, instruction):
         if instruction in DIRECTIONS:
@@ -265,8 +282,7 @@ class Golfish():
             self._skip = 1
 
         elif instruction in '"\'':
-            self._string_parse = not self._string_parse
-            self._parse_char = instruction
+            raise InvalidStateException # Shouldn't reach here
 
         elif instruction == "$":
             elem2 = self.pop()
@@ -473,7 +489,7 @@ class Golfish():
                 self._skip = 1
 
         elif instruction == "`":
-            self._push_char = True
+            raise InvalidStateException # Shouldn't reach here
 
         elif instruction == "g":
             y = self.pop()

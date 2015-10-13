@@ -97,7 +97,7 @@ p        Pop y, x, char and put char at (x, y)
 q        Conditional: pop and execute next if truthy, else skip 2
 r        Reverse stack
 s        
-t        Teleport to last teleport pad
+t        Teleport to last teleport pad, default (-1, 0)
 u        
 Su       Uppercase
 v        Move down
