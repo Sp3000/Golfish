@@ -1,2 +1,3 @@
-# Golfish
-The 2D golf-ish language based on >&lt;>
+Gol><>, the slightly golfier version of ><>
+
+[Online interpreter](https://golfish.herokuapp.com)
