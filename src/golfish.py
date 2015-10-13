@@ -473,7 +473,7 @@ class Golfish():
                 self._skip = 1
 
         elif instruction == "`":
-            self._push_char = True
+            self._push_char = not self._push_char
 
         elif instruction == "g":
             y = self.pop()
@@ -758,4 +758,3 @@ if __name__ == "__main__":
             interpreter = Golfish(infile.read(), debug=debug)
 
     interpreter.run()
-
