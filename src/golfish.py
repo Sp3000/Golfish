@@ -363,7 +363,7 @@ class Golfish():
             self.push(elem1)
 
         elif instruction == "D":
-            self.output(str(self._curr_stack) + "\n")
+            self.output(str(self._curr_stack).replace(",", "") + "\n")
 
         elif instruction == "E":
             elem = self.pop()
