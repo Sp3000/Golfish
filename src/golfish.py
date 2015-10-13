@@ -224,6 +224,10 @@ class Golfish():
             self._toggled = True
             return
 
+        if instruction == "D":
+            self.output(str(self._curr_stack).replace(",", "") + "\n")
+            return
+
         if self._skip > 0:
             self._skip -= 1
             self._toggled = False
@@ -363,7 +367,7 @@ class Golfish():
             self.push(elem1)
 
         elif instruction == "D":
-            self.output(str(self._curr_stack).replace(",", "") + "\n")
+            raise InvalidStateException # Shouldn't reach here
 
         elif instruction == "E":
             elem = self.pop()
@@ -373,7 +377,8 @@ class Golfish():
                 self.push(elem)
         
         elif instruction == "H":
-            for elem in self._curr_stack:
+            while self._curr_stack:
+                elem = self.pop()
                 self.output_as_char(elem)
 
             self.halt()
@@ -570,12 +575,6 @@ class Golfish():
         elif instruction == ")":
             elem = self.pop()
             self.push(math.ceil(elem))
-
-        elif instruction == "*":
-            self._curr_stack = [reduce(operator.mul, self._curr_stack, 1)]
-
-        elif instruction == "+":
-            self._curr_stack = [sum(self._curr_stack)]
 
         elif instruction == ",":
             elem2 = self.pop()
