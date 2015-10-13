@@ -1,0 +1,2 @@
+/src/*.txt
+!/src/doc.txt
