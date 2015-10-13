@@ -371,14 +371,11 @@ class Golfish():
             dots = 0
             char = self.read_char()
 
-            while char >= 0 and chr(char) not in "-0123456789.":
+            while char >= 0 and chr(char) not in "0123456789.":
                 char = self.read_char()
 
-            while char >= 0 and chr(char) in "-0123456789.":
+            while char >= 0 and chr(char) in "0123456789.":
                 if char == ord(".") and dots > 0:
-                    break
-
-                if char == ord("-") and num:
                     break
 
                 num += chr(char)
@@ -571,6 +568,34 @@ class Golfish():
         elif instruction == "C":
             elem = self.pop()
             self.push(math.cos(elem))
+
+        elif instruction == "I":
+            num = ""
+            dots = 0
+            char = self.read_char()
+
+            while char >= 0 and chr(char) not in "-0123456789.":
+                char = self.read_char()
+
+            while char >= 0 and chr(char) in "-0123456789.":
+                if char == ord(".") and dots > 0:
+                    break
+
+                if char == ord("-") and num:
+                    break
+
+                num += chr(char)
+                dots += (char == ord("."))
+                char = self.read_char()
+
+            self._input_buffer = char
+
+            if num:
+                num = float(num)
+                self.push(int(num) if num == int(num) else num)
+
+            else:
+                self._dir = DIRECTIONS["v"]
 
         elif instruction == "L":
             elem2 = self.pop()
