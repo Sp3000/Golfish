@@ -377,7 +377,8 @@ class Golfish():
                 self.push(elem)
         
         elif instruction == "H":
-            for elem in self._curr_stack:
+            while self._curr_stack:
+                elem = self.pop()
                 self.output_as_char(elem)
 
             self.halt()
