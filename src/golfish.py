@@ -224,6 +224,10 @@ class Golfish():
             self._toggled = True
             return
 
+        if instruction == "D":
+            self.output(str(self._curr_stack).replace(",", "") + "\n")
+            return
+
         if self._skip > 0:
             self._skip -= 1
             self._toggled = False
@@ -363,7 +367,7 @@ class Golfish():
             self.push(elem1)
 
         elif instruction == "D":
-            self.output(str(self._curr_stack).replace(",", "") + "\n")
+            raise InvalidStateException # Shouldn't reach here
 
         elif instruction == "E":
             elem = self.pop()

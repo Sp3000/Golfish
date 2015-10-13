@@ -44,7 +44,7 @@ A
 B        
 C        
 SC       Cosine
-D        Debug
+D        Debug, outputting stack. Does not count as an instruction for conditionals/trampolines.
 E        Conditional: Pop and execute next if EOF (-1), else skip 1 and re-push. Essentially :m=? except it gets rid of the -1 as well.
 F        
 G        
