@@ -117,7 +117,7 @@ class Golfish():
                 print("something smells fishy... ", end="")
 
                 if char in range(32, 127):
-                    print("(instruction {} '{}' at {},{})".format(char, chr(char), pos[0], pos[1]))
+                    print("(instruction {} '{}' at {},{})".format(char, "S"*self._toggled + chr(char), pos[0], pos[1]))
                 else:
                     print("(instruction {} at {},{})".format(char, pos[0], pos[1]))
                     
@@ -125,7 +125,7 @@ class Golfish():
                 print("something smells fishy... ", end="", file=sys.stderr)
                 
                 if char in range(32, 127):
-                    print("(instruction {} '{}' at {},{})".format(char, chr(char), pos[0], pos[1]), file=sys.stderr)
+                    print("(instruction {} '{}' at {},{})".format(char, "S"*self._toggled + chr(char), pos[0], pos[1]), file=sys.stderr)
                 else:
                     print("(instruction {} at {},{})".format(char, pos[0], pos[1]), file=sys.stderr)       
 
@@ -547,6 +547,14 @@ class Golfish():
 
             self.push(gcd(elem1, elem2))
 
+        elif instruction == "(":
+            elem = self.pop()
+            self.push(math.floor(elem))
+
+        elif instruction == ")":
+            elem = self.pop()
+            self.push(math.ceil(elem))
+
         elif instruction == "*":
             self._curr_stack = [reduce(operator.mul, self._curr_stack, 1)]
 
@@ -564,6 +572,10 @@ class Golfish():
 
         elif instruction == "3":
             self.push(math.pi)
+
+        elif instruction == "=":
+            elem = self.pop()
+            self.push(round(elem))
 
         elif instruction == "C":
             elem = self.pop()
@@ -613,6 +625,9 @@ class Golfish():
         elif instruction == "T":
             elem = self.pop()
             self.push(math.tan(elem))
+
+        elif instruction == "X":
+            self.push(random.random())
 
         elif instruction == "l":
             elem = chr(self.pop())

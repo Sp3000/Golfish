@@ -8,7 +8,9 @@ S%       GCD
 &        Save to register/push from register
 '        String parsing
 (        Less than
+S(       Floor
 )        Greater than
+S)       Ceil
 *        Multiply
 S*       Stack product
 +        Add
@@ -34,6 +36,7 @@ S3       Push pi
 ;        Halt with no output
 <        Move left
 =        Equals
+S=       Round
 >        Move right
 ?        Conditional: pop and execute next if truthy, else skip 1
 @        Rotate 3, moving 3rd down to top
@@ -67,6 +70,7 @@ U
 V        Save to variable (determined by next char)
 W        
 X        Exponentiation
+SX       Push random float in [0, 1)
 Y        
 Z        Is zero: Push 1 if zero, else 0
 [        Pop n. Move one stack left, taking the top n elements with you.
