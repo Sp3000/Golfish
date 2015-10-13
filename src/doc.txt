@@ -61,7 +61,7 @@ O
 P        Plus 1
 SP       Primality test
 Q        Conditional: Pop n, then pop and execute next if truthy, else skip n
-R        
+R        Pop n, repeat next instruction n times (experimental)
 S        Switch: Toggle next instruction
 SS       Sine
 T        Set teleport pad

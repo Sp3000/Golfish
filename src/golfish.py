@@ -97,7 +97,9 @@ class Golfish():
 
         self._online = online
 
-    def run(self):
+        self._R_repeat = 1
+
+    def run(self):        
         try:
             while True:
                 self.tick()
@@ -105,8 +107,14 @@ class Golfish():
         except HaltProgram:
             pass
         
-        except KeyboardInterrupt:    
+        except KeyboardInterrupt as e:    
             print("^C", file=sys.stderr)
+
+            if self._debug:
+                if self._online:
+                    traceback.print_exc(file=sys.stdout)
+                else:
+                    raise e
 
         except Exception as e:
             pos = self._pos
@@ -129,7 +137,6 @@ class Golfish():
                 else:
                     print("(instruction {} at {},{})".format(char, pos[0], pos[1]), file=sys.stderr)       
 
-            # For debugging
             if self._debug:
                 if self._online:
                     traceback.print_exc(file=sys.stdout)
@@ -224,13 +231,18 @@ class Golfish():
 
         elif self._skip < 0:
             self._skip = 0
+
+        tmp_R_repeat, self._R_repeat = self._R_repeat, 1
         
         if self._toggled:
-            self.handle_switched_instruction(instruction)
+            for _ in range(int(tmp_R_repeat)):
+                self.handle_switched_instruction(instruction)
+                
             self._toggled = False
 
         else:
-            self.handle_normal_instruction(instruction)
+            for _ in range(int(tmp_R_repeat)):
+                self.handle_normal_instruction(instruction)
 
     def handle_normal_instruction(self, instruction):
         if instruction in DIRECTIONS:
@@ -416,6 +428,10 @@ class Golfish():
 
             if not cond:
                 self._skip = max(0, skip)
+
+        elif instruction == "R":
+            elem = self.pop()
+            self._R_repeat = elem
 
         elif instruction == "S":
             raise InvalidStateException # Shouldn't reach here
