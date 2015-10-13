@@ -69,9 +69,10 @@ class Golfish():
         self._pos = [-1, 0] # [x, y]
         self._dir = DIRECTIONS[">"]
 
-        self._stack_stack = [[]]
-        self._curr_stack = self._stack_stack[-1]
-        self._register_stack = [None]
+        self._stack_tape = defaultdict(list)
+        self._curr_stack = self._stack_tape[0]
+        self._stack_num = 0
+        self._register_tape = defaultdict(lambda:None)
 
         self._input_buffer = None
 
@@ -266,12 +267,12 @@ class Golfish():
             self.push(elem1 % elem2)
 
         elif instruction == "&":
-            if self._register_stack[-1] is None:
-                self._register_stack[-1] = self.pop()
+            if self._register_tape[self._stack_num] is None:
+                self._register_tape[self._stack_num] = self.pop()
 
             else:
-                self.push(self._register_stack.pop())
-                self._register_stack.append(None)
+                self.push(self._register_tape[self._stack_num])
+                self._register_tape[self._stack_num] = None
 
         elif instruction == "(":
             elem2 = self.pop()
@@ -352,6 +353,13 @@ class Golfish():
 
         elif instruction == "D":
             self.output(str(self._curr_stack) + "\n")
+
+        elif instruction == "E":
+            elem = self.pop()
+
+            if elem != EOF:
+                self._skip = 1
+                self.push(elem)
         
         elif instruction == "H":
             for elem in self._curr_stack:
@@ -426,7 +434,12 @@ class Golfish():
         elif instruction == "X":
             elem2 = self.pop()
             elem1 = self.pop()
-            self.push(elem1 ** elem2)
+            result = elem1 ** elem2
+
+            if isinstance(result, complex):
+                raise InvalidStateException
+            
+            self.push(result)
 
         elif instruction == "Z":
             elem = self.pop()
@@ -508,31 +521,16 @@ class Golfish():
             if condition:
                 self._skip = 1
 
-##        elif instruction == "[":
-##            elem = self.pop()
-##            
-##            if elem > 0:
-##                to_move, self._stack_stack[-1] = self._curr_stack[-elem:], self._curr_stack[:-elem]
-##            else:
-##                to_move = []
-##
-##            self._stack_stack.append(to_move)
-##            self._curr_stack = self._stack_stack[-1]
-##            self._register_stack.append(None)
-##
-##        elif instruction == "]":           
-##            if len(self._stack_stack) == 1:
-##                self._stack_stack = [[]]
-##                self._curr_stack = self._stack_stack[-1]
-##                self._register_stack = [None]
-##
-##            else:
-##                self._register_stack.pop()
-##
-##                last = self._stack_stack.pop()
-##                self._curr_stack = self._stack_stack[-1]
-##                self._curr_stack.extend(last)
+        elif instruction in "[]":
+            elem = self.pop()
+            to_take = []
 
+            for _ in range(int(elem)):
+                to_take.append(self.pop())
+
+            self._stack_num += 1 if instruction == "]" else -1
+            self._curr_stack = self._stack_tape[self._stack_num]
+            self._curr_stack.extend(to_take[::-1])
 
         elif instruction == "{":
             self.rotate_left()
@@ -672,7 +670,7 @@ class Golfish():
                 self.output_as_char(elem)
 
         else:
-            self.output(chr(round(out)))
+            self.output(chr(int(out)))
 
 
     def output_as_num(self, out):

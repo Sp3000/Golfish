@@ -42,7 +42,7 @@ B
 C        
 SC       Cosine
 D        Debug
-E        
+E        Conditional: Pop and execute next if EOF (-1), else skip 1 and re-push. Essentially :m=? except it gets rid of the -1 as well.
 F        
 G        
 H        Halt and output stack as string
@@ -68,9 +68,9 @@ W
 X        Exponentiation
 Y        
 Z        Is zero: Push 1 if zero, else 0
-[        
+[        Pop n. Move one stack left, taking the top n elements with you.
 \        Mirror
-]        
+]        Pop n. Move one stack right, taking the top n elements with you.
 ^        Move up
 _        Horizontal mirror
 `        Escape next to char
