@@ -62,7 +62,7 @@ Q        Conditional: Pop n, then pop and execute next if truthy, else skip n
 R        Pop n, repeat next instruction n times (experimental)
 S        Switch: Toggle next instruction
 SS       Sine
-T        Set teleport pad
+T        Set teleport pad, saving direction
 ST       Tangent
 U        
 V        Pops element and saves to variable determined by next char
@@ -71,9 +71,9 @@ X        Exponentiation
 SX       Push random float in [0, 1)
 Y        
 Z        Conditional: Pop and execute next if zero/falsy, else skip 1
-[        Pop n. Move one stack left, taking the top n elements with you.
+[        Pop an element and push it to the stack to the left.
 \        Mirror
-]        Pop n. Move one stack right, taking the top n elements with you.
+]        Pop an element and push it to the stack to the right.
 ^        Move up
 _        Horizontal mirror
 `        Escape next to char, pushing to stack

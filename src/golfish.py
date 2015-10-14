@@ -535,14 +535,8 @@ class Golfish():
 
         elif instruction in "[]":
             elem = self.pop()
-            to_take = []
-
-            for _ in range(int(elem)):
-                to_take.append(self.pop())
-
-            self._stack_num += 1 if instruction == "]" else -1
-            self._curr_stack = self._stack_tape[self._stack_num]
-            self._curr_stack.extend(to_take[::-1])
+            offset = 1 if instruction == "]" else -1
+            self._stack_tape[self._stack_num + offset].append(elem)
 
         elif instruction == "{":
             self.rotate_left()
