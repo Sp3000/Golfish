@@ -1,5 +1,5 @@
          NOP
-!        Trampoline: Skip 1
+!        Trampoline: add 1 to skip count
 "        String parsing - push chars until closing ", backtick escapes "`nr
 #        4-way mirror
 $        Swap two
@@ -65,7 +65,7 @@ SS       Sine
 T        Set teleport pad
 ST       Tangent
 U        
-V        Save to variable (determined by next char)
+V        Pops element and saves to variable determined by next char
 W        <unimplemented: while loop>
 X        Exponentiation
 SX       Push random float in [0, 1)
@@ -76,7 +76,7 @@ Z        Conditional: Pop and execute next if zero/falsy, else skip 1
 ]        Pop n. Move one stack right, taking the top n elements with you.
 ^        Move up
 _        Horizontal mirror
-`        Escape next to char
+`        Escape next to char, pushing to stack
 a        Push 10
 b        Push 11
 c        Push 12

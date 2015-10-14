@@ -10,39 +10,56 @@ class TestGolfish(unittest.TestCase):
         sys.stdout = io.StringIO()
 
     def test_arithmetic(self):
-        gf = Golfish("12+n;").run()
-        self.assertEqual(self.output(), "3")
-
-        gf = Golfish("34+5*n;").run()
-        self.assertEqual(self.output(), "35")
-
-        gf = Golfish("42,7-n;").run()
-        self.assertEqual(self.output(), "-5")
-
-        gf = Golfish("67*5%7+9*n;").run()
-        self.assertEqual(self.output(), "81")
+        self.run_test("12+n;", "3")
+        self.run_test("34+5*n;", "35")
+        self.run_test("42,7-n;", "-5")
+        self.run_test("67*5%7+9*n;", "81")
 
     def test_push_num(self):
         for i, c in enumerate("m0123456789abcdef", start=-1):
-            gf = Golfish(c + "n;").run()
-            self.assertEqual(self.output(), str(i))
+            self.run_test(c + "n;", str(i))
 
     def test_push_string(self):
-        gf = Golfish("'abcdef'rH").run()
-        self.assertEqual(self.output(), "abcdef")
-        gf = Golfish('"abcdef"rH').run()
-        self.assertEqual(self.output(), "abcdef")
+        self.run_test("'abcdef'rH", "abcdef")
+        self.run_test('"abcdef"rH', "abcdef")
 
-        gf = Golfish("'ab`n`rdef'rH").run()
-        self.assertEqual(self.output(), "ab\n\rdef")
-        gf = Golfish('"ab`n`rdef"rH').run()
-        self.assertEqual(self.output(), "ab\n\rdef")
+        self.run_test("'ab`n`rdef'rH", "ab\n\rdef")
+        self.run_test('"ab`n`rdef"rH', "ab\n\rdef")
 
-        gf = Golfish("""'`''"`""rH""").run()
-        self.assertEqual(self.output(), "'\"")
+        self.run_test("""'`''"`""rH""", "'\"")
+        self.run_test("'````a'rH", "``a")
 
-        gf = Golfish("'````a'rH").run()
-        self.assertEqual(self.output(), "``a")
+    def test_debug_jump(self):
+        self.run_test("5RDn;", "[]\n00000")
+        self.run_test("4!D5nn;", "[4]\n40")
+
+    def test_wrap(self):
+        grid = dedent("""\
+                      <  vn1
+                        n\     !2
+                        //;
+                        3
+                      """)
+        
+        self.run_test(grid, "103")
+
+    def test_Rspace(self):
+        self.run_test("123R D;", "[1 2]\n")
+
+    def test_Rspace(self):
+        self.run_test("123R D;", "[1 2]\n")
+
+    def test_Rexclamation(self):
+        self.run_test("123R!456h", "2")
+
+    def run_test(self, prog, output):
+        if isinstance(prog, str):
+            gf = Golfish(prog)
+        else:
+            gf = Golfish(*prog)
+
+        gf.run()
+        self.assertEqual(self.output(), output)        
 
     def output(self):
         val = sys.stdout.getvalue()

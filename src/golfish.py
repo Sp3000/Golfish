@@ -217,7 +217,7 @@ class Golfish():
             pass
 
         elif instruction == "!":
-            self._skip = 1
+            self._skip += 1
 
         elif instruction in '"\'':
             escaped = False
