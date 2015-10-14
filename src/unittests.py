@@ -66,6 +66,9 @@ class TestGolfish(unittest.TestCase):
         self.run_test("1R`aH", "a")
         self.run_test("5R`aH", "aaaaa")
 
+    def test_stack_tape(self):
+        self.run_test("567D[[DAD;", "[5 6 7]\n[5]\n[7 6]\n")
+
     def run_test(self, prog, output):
         if isinstance(prog, str):
             gf = Golfish(prog)

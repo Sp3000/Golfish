@@ -358,6 +358,14 @@ class Golfish():
             self.push(elem3)
             self.push(elem1)
 
+        elif instruction == "A":
+            self._stack_num -= 1
+            self._curr_stack = self._stack_tape[self._stack_num]
+
+        elif instruction == "B":
+            self._stack_num += 1
+            self._curr_stack = self._stack_tape[self._stack_num]
+
         elif instruction == "D":
             raise InvalidStateException # Shouldn't reach here
 
