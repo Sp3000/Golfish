@@ -184,20 +184,28 @@ class Golfish():
         elif self._skip < 0:
             self._skip = 0
 
-        tmp_R_repeat, self._R_repeat = self._R_repeat, 1
+        tmp_R_repeat, self._R_repeat = int(self._R_repeat), 1
         tmp_pos = self._pos[:]
         
         if self._toggled:
-            for _ in range(int(tmp_R_repeat)):
+            for _ in range(tmp_R_repeat):
                 self._pos = tmp_pos[:]
                 self.handle_switched_instruction(instruction)
                 
             self._toggled = False
 
         else:
-            for _ in range(int(tmp_R_repeat)):
-                self._pos = tmp_pos[:]
-                self.handle_normal_instruction(instruction)
+            if tmp_R_repeat > 0:
+                for _ in range(tmp_R_repeat):
+                    self._pos = tmp_pos[:]
+                    self.handle_normal_instruction(instruction)
+
+            else:
+                # Special cases for 0R
+                if instruction in "'\"`":
+                    tmp_stack = self._curr_stack[:]
+                    self.handle_normal_instruction(instruction)
+                    self._curr_stack = tmp_stack
 
     def handle_normal_instruction(self, instruction):
         if instruction in self._variable_map:

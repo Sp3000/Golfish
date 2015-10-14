@@ -29,6 +29,9 @@ class TestGolfish(unittest.TestCase):
         self.run_test("""'`''"`""rH""", "'\"")
         self.run_test("'````a'rH", "``a")
 
+    def test_backtick(self):
+        self.run_test("`````aH", "a``")
+
     def test_debug_jump(self):
         self.run_test("5RDn;", "[]\n00000")
         self.run_test("4!D5nn;", "[4]\n40")
@@ -45,12 +48,23 @@ class TestGolfish(unittest.TestCase):
 
     def test_Rspace(self):
         self.run_test("123R D;", "[1 2]\n")
-
-    def test_Rspace(self):
-        self.run_test("123R D;", "[1 2]\n")
+        self.run_test("120R D;", "[1 2]\n")
 
     def test_Rexclamation(self):
+        self.run_test("120R!3h", "3")
+        self.run_test("122R!456h", "6")
         self.run_test("123R!456h", "2")
+
+    def test_Rquote(self):
+        self.run_test("0R'abc'H", "")
+        self.run_test("1R'abc'H", "cba")
+        self.run_test("5R'abc'H", "cbacbacbacbacba")
+        self.run_test('5R"abc"H', "cbacbacbacbacba")
+
+    def test_Rbacktick(self):
+        self.run_test("0R`aH", "")
+        self.run_test("1R`aH", "a")
+        self.run_test("5R`aH", "aaaaa")
 
     def run_test(self, prog, output):
         if isinstance(prog, str):
