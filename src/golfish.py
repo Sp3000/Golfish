@@ -52,7 +52,7 @@ class InvalidStateException(Exception):
 
 
 class Golfish():
-    def __init__(self, code, input_=None, debug=False, online=False):
+    def __init__(self, code="", input_=None, debug=False, online=False):
         rows = code.split("\n")
         self._board = defaultdict(lambda: defaultdict(int))
         x = y = 0
@@ -78,19 +78,11 @@ class Golfish():
 
         self._toggled = False # S
         self._skip = 0 # ?! and more
-        
-        self._push_char = False # `
-
-        self._escape = False
-        self._string_parse = False
-        self._parse_char = None # ' or "
-        self._parse_buffer = []
 
         self._bookmark_pos = [-1, 0] # tT
         self._bookmark_dir = DIRECTIONS[">"]
 
         self._variable_map = {}
-        self._set_variable = False
 
         self._input = input_
         self._debug = debug
@@ -176,50 +168,6 @@ class Golfish():
     def handle_instruction(self, char):
         instruction = chr(char)
 
-        if self._set_variable == True:
-            elem = self.pop()
-            self._variable_map[instruction] = elem
-            
-            self._set_variable = False
-            return
-
-        if instruction in self._variable_map:
-            self.push(self._variable_map[instruction])
-            return
-
-        if self._string_parse:
-            if self._escape:
-                escapes = {"`": ord("`"), "n": ord("\n"), "r": ord("\r")}
-                escapes.update({self._parse_char: ord(self._parse_char)})
-                
-                if instruction in escapes:
-                    self._parse_buffer.append(escapes[instruction])
-
-                else:
-                    self._parse_buffer.append(ord("`"))
-                    self._parse_buffer.append(char)
-
-                self._escape = False
-
-            else:
-                if instruction == self._parse_char:
-                    self._string_parse = False
-                    self._curr_stack.extend(self._parse_buffer)
-                    self._parse_buffer = []
-
-                elif instruction == '`':
-                    self._escape = True
-
-                else:
-                    self._parse_buffer.append(char)
-
-            return
-            
-        if self._push_char:
-            self.push(char)
-            self._push_char = False
-            return
-
         if instruction == "S" and not self._toggled:
             self._toggled = True
             return
@@ -237,18 +185,25 @@ class Golfish():
             self._skip = 0
 
         tmp_R_repeat, self._R_repeat = self._R_repeat, 1
+        tmp_pos = self._pos[:]
         
         if self._toggled:
             for _ in range(int(tmp_R_repeat)):
+                self._pos = tmp_pos[:]
                 self.handle_switched_instruction(instruction)
                 
             self._toggled = False
 
         else:
             for _ in range(int(tmp_R_repeat)):
+                self._pos = tmp_pos[:]
                 self.handle_normal_instruction(instruction)
 
     def handle_normal_instruction(self, instruction):
+        if instruction in self._variable_map:
+            self.push(self._variable_map[instruction])
+            return
+
         if instruction in DIRECTIONS:
             self._dir = DIRECTIONS[instruction]
 
@@ -265,8 +220,37 @@ class Golfish():
             self._skip = 1
 
         elif instruction in '"\'':
-            self._string_parse = not self._string_parse
-            self._parse_char = instruction
+            escaped = False
+            parse_char = ord(instruction)
+            parse_buffer = []
+
+            self.move()
+            char = self._board[self._pos[1]][self._pos[0]]
+            
+            while escaped or char != parse_char:
+                if escaped:
+                    escapes = {ord(a): ord(b) for a,b in zip("`nr","`\n\r")}
+                    escapes.update({parse_char: parse_char})
+                    
+                    if char in escapes:
+                        parse_buffer.append(escapes[char])
+
+                    else:
+                        parse_buffer.append(ord('`'))
+                        parse_buffer.append(char)
+
+                    escaped = False
+
+                else:
+                    if char == ord('`'):
+                        escaped = True
+                    else:
+                        parse_buffer.append(char)
+
+                self.move()
+                char = self._board[self._pos[1]][self._pos[0]]
+
+            self._curr_stack.extend(parse_buffer)
 
         elif instruction == "$":
             elem2 = self.pop()
@@ -454,7 +438,9 @@ class Golfish():
             self._bookmark_dir = self._dir
 
         elif instruction == "V":
-            self._set_variable = True
+            self.move()
+            char = self._board[self._pos[1]][self._pos[0]]
+            self._variable_map[chr(char)] = self.pop()
 
         elif instruction == "X":
             elem2 = self.pop()
@@ -473,7 +459,9 @@ class Golfish():
                 self._skip = 1
 
         elif instruction == "`":
-            self._push_char = not self._push_char
+            self.move()
+            char = self._board[self._pos[1]][self._pos[0]]
+            self.push(char)
 
         elif instruction == "g":
             y = self.pop()

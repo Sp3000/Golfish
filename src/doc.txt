@@ -1,12 +1,12 @@
          NOP
 !        Trampoline: Skip 1
-"        String parsing
+"        String parsing - push chars until closing ", backtick escapes "`nr
 #        4-way mirror
 $        Swap two
 %        Modulo (always nonnegative)
 S%       GCD
 &        Save to register/push from register
-'        String parsing
+'        String parsing - push chars until closing ', backtick escapes '`nr
 (        Less than
 S(       Floor
 )        Greater than
