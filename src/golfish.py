@@ -430,6 +430,14 @@ class Golfish():
 
                 self.bookmark_break()
 
+        elif instruction == "G":
+            bookmark = FunctionBookmark(self._pos[:], self._dir[:])
+            self._bookmark_stack.append(bookmark)
+
+            y = self.pop()
+            x = self.pop()
+            self._pos = [x, y]
+
         elif instruction == "H":
             while self._curr_stack:
                 elem = self.pop()
@@ -513,14 +521,6 @@ class Golfish():
         elif instruction == "T":
             self._bookmark_pos = self._pos[:]
             self._bookmark_dir = self._dir
-
-        elif instruction == "U":
-            bookmark = FunctionBookmark(self._pos[:], self._dir[:])
-            self._bookmark_stack.append(bookmark)
-
-            y = self.pop()
-            x = self.pop()
-            self._pos = [x, y]
 
         elif instruction == "V":
             self.move()
