@@ -36,6 +36,47 @@ class TestGolfish(unittest.TestCase):
         self.run_test("5RDn;", "[]\n00000")
         self.run_test("4!D5nn;", "[4]\n40")
 
+    def test_B(self):
+        grid = dedent("""\
+                      5FLNL2=?BC
+                       ;""")
+
+        self.run_test(grid, "0\n1\n2\n")
+
+    def test_F(self):
+        grid = dedent("""\
+                      0FLNMC
+                       ;""")
+
+        self.run_test(grid, "")
+    
+        grid = dedent("""\
+                      5FLNMC
+                       ;""")
+
+        self.run_test(grid, "0\n1\n2\n3\n4\n")
+
+        grid = dedent("""\
+                      v
+                      6
+                      Fha
+                      >LNMC""")
+
+        self.run_test(grid, "0\n1\n2\n3\n4\n5\n10")
+
+    def test_W(self):
+        grid = dedent("""\
+                      WC
+                      ;""")
+
+        self.run_test(grid, "")
+
+        grid = dedent("""\
+                      5W:NMC
+                       h""")
+
+        self.run_test(grid, "5\n4\n3\n2\n1\n0")
+
     def test_wrap(self):
         grid = dedent("""\
                       <  vn1

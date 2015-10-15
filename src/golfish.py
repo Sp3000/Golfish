@@ -3,7 +3,7 @@ Gol><>, the slightly golfier version of ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.4 (updated 15 Oct 2015)
+Version: 0.3.5 (updated 15 Oct 2015)
 """
 
 import codecs
@@ -31,14 +31,14 @@ except ImportError:
 
 DIGITS = "0123456789abcdef"
 
-DIRECTIONS = {"^": (0, -1),
-              ">": (1, 0),
-              "v": (0, 1),
-              "<": (-1, 0)}
+DIRECTIONS = {'^': [0, -1],
+              '>': [1, 0],
+              'v': [0, 1],
+              '<': [-1, 0]}
 
-MIRRORS = {"/": lambda x,y: (-y, -x),
-           "\\": lambda x,y: (y, x),
-           "#": lambda x,y: (-x, -y)}
+MIRRORS = {'/': lambda x,y: [-y, -x],
+           '\\': lambda x,y: [y, x],
+           '#': lambda x,y: [-x, -y]}
 
 EOF = -1
 
@@ -51,10 +51,9 @@ class InvalidStateException(Exception):
     pass
 
 class LoopBookmark():
-    def __init__(self, loop_pos, loop_dir, jump_pos, limit=None):
+    def __init__(self, loop_pos, loop_dir, limit=None):
         self.loop_pos = loop_pos
         self.loop_dir = loop_dir
-        self.jump_pos = jump_pos
 
         self.counter = 0
         self.limit = limit
@@ -165,16 +164,16 @@ class Golfish():
 
         # Wrap around
         if self._pos[1] in self._board:
-            if self._dir == DIRECTIONS[">"] and self._pos[0] > max(self._board[self._pos[1]].keys()):
+            if self._dir == DIRECTIONS['>'] and self._pos[0] > max(self._board[self._pos[1]].keys()):
                 self._pos[0] = 0
 
-            elif self._dir == DIRECTIONS["<"] and self._pos[0] < 0:
+            elif self._dir == DIRECTIONS['<'] and self._pos[0] < 0:
                 self._pos[0] = max(self._board[self._pos[1]].keys())
 
-        elif self._dir == DIRECTIONS["v"] and self._pos[1] > max(self._board.keys()):
+        elif self._dir == DIRECTIONS['v'] and self._pos[1] > max(self._board.keys()):
             self._pos[1] = 0
         
-        elif self._dir == DIRECTIONS["^"] and self._pos[1] < 0:
+        elif self._dir == DIRECTIONS['^'] and self._pos[1] < 0:
             self._pos[1] = max(self._board.keys())
 
 
@@ -377,8 +376,7 @@ class Golfish():
 
         elif instruction == "B":
             if self._loop_stack:
-                bookmark = self._loop_stack.pop()
-                self._pos = bookmark.jump_pos
+                self.loop_break()
 
             else:
                 raise InvalidStateException("Break from non-loop")
@@ -406,18 +404,14 @@ class Golfish():
                 self._loop_stack[-1].increment_counter()
                 
             if not self._loop_stack or self._loop_stack[-1].loop_pos != self.pos_before():
-                y = self.pop()
-                x = self.pop()
                 limit = self.pop()
                 
-                bookmark = LoopBookmark(self.pos_before(), self._dir[:], [x, y], limit)
+                bookmark = LoopBookmark(self.pos_before(), self._dir[:], limit)
                 self._loop_stack.append(bookmark)
-                self._C_counter = 0
 
             if self._loop_stack and self._loop_stack[-1].counter >= self._loop_stack[-1].limit:
-                bookmark = self._loop_stack.pop()
-                self._pos = bookmark.jump_pos
-        
+                self.loop_break()
+
         elif instruction == "H":
             while self._curr_stack:
                 elem = self.pop()
@@ -507,17 +501,13 @@ class Golfish():
             char = self._board[self._pos[1]][self._pos[0]]
             self._variable_map[chr(char)] = self.pop()
 
-        elif instruction == "W":            
+        elif instruction == "W":
             if not self._loop_stack or self._loop_stack[-1].loop_pos != self.pos_before():
-                y = self.pop()
-                x = self.pop()
-                
-                bookmark = LoopBookmark(self.pos_before(), self._dir[:], [x, y])
+                bookmark = LoopBookmark(self.pos_before(), self._dir[:])
                 self._loop_stack.append(bookmark)
 
             if not self.peek():
-                bookmark = self._loop_stack.pop()
-                self._pos = bookmark.jump_pos
+                self.loop_break()
 
         elif instruction == "X":
             elem2 = self.pop()
@@ -760,6 +750,15 @@ class Golfish():
 
     def rotate_right(self):
         self.push(self.pop(), index=0)
+
+
+    def loop_break(self):
+        bookmark = self._loop_stack.pop()
+        self._pos = bookmark.loop_pos
+        self._dir = bookmark.loop_dir[:]
+        self.move()
+
+        self._dir = [-self._dir[1], self._dir[0]] # Turn right
 
 
     def read_char(self):
