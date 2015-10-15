@@ -47,7 +47,7 @@ C     continue        Continue loop, for F and W
 SC    cos             Cosine
 D     debug           Debug, outputting stack. Does not count as an instruction for conditionals/trampolines.
 E     eof-cond        Conditional: Pop and execute next if EOF (-1), else skip 1 and re-push. Essentially :m=? except it gets rid of the -1 as well.
-F     for             For loop. Pops y,x,n - (x,y) are coordinates to jump to after loop, n is number of loops. C is loop counter.
+F     for             For loop. Pops n, number of loops. L is loop counter. Turns right on completion.
 G        
 H     halt-char       Output stack as char until empty then halt
 I     input-pos       Numeric input: Read next non-negative int/float. Push -1 on EOF.
@@ -69,7 +69,7 @@ T     teleport-pad    Set teleport pad, saving direction
 ST    tan             Tangent
 U        
 V     var             Pops element and saves to variable determined by next char
-W     while           While loop. Pops y,x, (x,y) are coordinates to jump to after loop. Peeks at top for falsy value.
+W     while           While loop. Peeks at top for falsy value. Turns right on completion.
 X     xponentiate     Exponentiation
 Y        
 Z     zero-cond       Conditional: Pop and execute next if zero/falsy, else skip 1
