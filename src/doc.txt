@@ -94,6 +94,7 @@ l     length          Push length of stack
 Sl    lower           Lowercase
 m     minus-1         Push -1
 n     num-out         Output as num
+Sn    num-rounding    Pop d, n and output n rounded to d decimal places
 o     out-char        Output as char
 p     put             Pop y, x, char and put char at (x, y)
 q     qmark-2         Conditional: pop and execute next if truthy, else skip 2 instructions
