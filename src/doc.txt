@@ -1,113 +1,114 @@
-         NOP
-!        Trampoline: add 1 to skip count
-"        String parsing - push chars until closing ", backtick escapes "`nr
-#        4-way mirror
-$        Swap two
-%        Modulo (always nonnegative)
-S%       GCD
-&        Save to register/push from register
-'        String parsing - push chars until closing ', backtick escapes '`nr
-(        Less than
-S(       Floor
-)        Greater than
-S)       Ceil
-*        Multiply
-+        Add
-,        Floating point division
-S,       Integer division
--        Subtract
-.        Pop y, x and jump to (x, y)
-/        Mirror
-0        Push 0
-1        Push 1
-2        Push 2
-S2       Push e
-3        Push 3
-S3       Push pi
-4        Push 4
-5        Push 5
-6        Push 6
-7        Push 7
-8        Push 8
-9        Push 9
-:        Duplicate
-;        Halt with no output
-<        Move left
-=        Equals
-S=       Round
->        Move right
-?        Conditional: pop and execute next if truthy, else skip 1
-@        Rotate 3, moving 3rd down to top
+Char  Mnemonic        Details
+
+                      NOP
+!                     Trampoline: add 1 to instructions skip count
+"                     String parsing - push chars until closing ", backtick escapes "`nr
+#                     4-way mirror
+$                     Swap two
+%                     Modulo (always nonnegative)
+S%    euclid-alg      GCD
+&                     Save to register/push from register
+'                     String parsing - push chars until closing ', backtick escapes '`nr
+(                     Less than
+S(    int-lt          Floor
+)                     Greater than
+S)    int-gt          Ceil
+*                     Multiply
++                     Add
+,                     Floating point division
+S,    like ,          Integer division
+-                     Subtract
+.                     Pop y, x and jump to (x, y)
+/                     Mirror
+0                     Push 0
+1                     Push 1
+2                     Push 2
+S2    2.718           Push e
+3                     Push 3
+S3    3.14            Push pi
+4                     Push 4
+5                     Push 5
+6                     Push 6
+7                     Push 7
+8                     Push 8
+9                     Push 9
+:                     Duplicate
+;                     Halt with no output
+<                     Move left
+=                     Equals
+S=                    Round
+>                     Move right
+?                     Conditional: pop and execute next if truthy, else skip 1
+@                     Rotate 3, moving 3rd down to top
 A        
-SA       Absolute value
-B        
-C        Continue loop, for F and W
-SC       Cosine
-D        Debug, outputting stack. Does not count as an instruction for conditionals/trampolines.
-E        Conditional: Pop and execute next if EOF (-1), else skip 1 and re-push. Essentially :m=? except it gets rid of the -1 as well.
-F        For loop. Pops y,x,n - (x,y) are coordinates to jump to after loop, n is number of loops. C is loop counter.
+SA    abs             Absolute value
+B     break           Break from loop
+C     continue        Continue loop, for F and W
+SC    cos             Cosine
+D     debug           Debug, outputting stack. Does not count as an instruction for conditionals/trampolines.
+E     eof-cond        Conditional: Pop and execute next if EOF (-1), else skip 1 and re-push. Essentially :m=? except it gets rid of the -1 as well.
+F     for             For loop. Pops y,x,n - (x,y) are coordinates to jump to after loop, n is number of loops. C is loop counter.
 G        
-H        Output stack as char until empty then halt
-I        Numeric input: Read next non-negative int/float. Push -1 on EOF.
-SI       Numeric input: Read next int/float (possible negative). Change direction to down on EOF.
-J        Conditional jump: pop cond, y, x and jump to (x, y) if cond
-K        Multiple copy: Pop n and copy the top n elements
-L        Loop counter for F. Starts at zero.
-SL       Pop b,a and push log(a,b)
-M        Minus 1
-N        Output as num + trailing newline
+H     halt-char       Output stack as char until empty then halt
+I     input-pos       Numeric input: Read next non-negative int/float. Push -1 on EOF.
+SI    input-num       Numeric input: Read next int/float (possible negative). Change direction to down on EOF.
+J     jump-cond       Conditional jump: pop cond, y, x and jump to (x, y) if cond
+K     kopy-n          Multiple copy: Pop n and copy the top n elements
+L     loop-counter    Loop counter for F. Starts at zero.
+SL    log             Pop b,a and push log(a,b)
+M     minus-1         Minus 1
+N     num-out-nl      Output as num + trailing newline
 O        
-P        Plus 1
-SP       Primality test
-Q        Conditional: Pop n, then pop and execute next if truthy, else skip n
-R        Pop n, repeat next instruction n times (experimental)
-S        Switch: Toggle next instruction
-SS       Sine
-T        Set teleport pad, saving direction
-ST       Tangent
+P     plus-1          Plus 1
+SP    prime           Primality test
+Q     qmark-any       Conditional: Pop n, then pop and execute next if truthy, else skip n instructions
+R     repeat          Pop n, repeat next instruction n times (experimental)
+S     switch          Toggle functionality of next instruction
+SS    sin             Sine
+T     teleport-pad    Set teleport pad, saving direction
+ST    tan             Tangent
 U        
-V        Pops element and saves to variable determined by next char
-W        While loop. Pops y,x, (x,y) are coordinates to jump to after loop. Peeks at top for falsy value.
-X        Exponentiation
-SX       Push random float in [0, 1)
+V     var             Pops element and saves to variable determined by next char
+W     while           While loop. Pops y,x, (x,y) are coordinates to jump to after loop. Peeks at top for falsy value.
+X     xponentiate     Exponentiation
 Y        
-Z        Conditional: Pop and execute next if zero/falsy, else skip 1
-[        Pop an element and push it to the stack to the left.
-\        Mirror
-]        Pop an element and push it to the stack to the right.
-^        Move up
-_        Horizontal mirror
-`        Escape next to char, pushing to stack
-a        Push 10
-b        Push 11
-c        Push 12
-d        Push 13
-e        Push 14
-f        Push 15
-g        Pop y, x and push char at (x, y)
-h        Halt and output top of stack as num
-i        Read char
+Z     zero-cond       Conditional: Pop and execute next if zero/falsy, else skip 1
+[                     Pop an element and push it to the stack to the left.
+\                     Mirror
+]                     Pop an element and push it to the stack to the right.
+^                     Move up
+_                     Horizontal mirror
+`                     Escape next to char, pushing to stack
+a     a-hex           Push 10
+b     b-hex           Push 11
+c     c-hex           Push 12
+d     d-hex           Push 13
+e     e-hex           Push 14
+f     f-hex           Push 15
+g     get             Pop y, x and push char at (x, y)
+h     halt-num        Halt and output top of stack as num
+i     input-char      Read char
 j
-k        Get nth element down (top is 0)
-l        Push length of stack
-Sl       Lowercase
-m        Push -1
-n        Output as num
-o        Output as char
-p        Pop y, x, char and put char at (x, y)
-q        Conditional: pop and execute next if truthy, else skip 2
-r        Reverse stack
-s        
-t        Teleport to last teleport pad
+k     kopy-nth        Get nth element down (top is 0). Indices wrap.
+l     length          Push length of stack
+Sl    lower           Lowercase
+m     minus-1         Push -1
+n     num-out         Output as num
+o     out-char        Output as char
+p     put             Pop y, x, char and put char at (x, y)
+q     qmark-2         Conditional: pop and execute next if truthy, else skip 2 instructions
+r     reverse         Reverse stack
+s     sixteen         Pop n, push n+16
+t     teleport        Teleport to last teleport pad
 u        
-Su       Uppercase
-v        Move down
+Su    upper           Uppercase
+v                     Move down
 w        
-x        Random direction
-Sx       
+x                     Random direction
+Sx    like x          Push random float in [0, 1)
 y        
-z        Is zero: Push 1 if zero, else 0
-{        Shift stack left
-|        Mirror
-}        Shift stack right
-~        Pop and discard
+z     zero-eq         Is zero: Push 1 if zero, else 0
+{                     Shift stack left
+|                     Mirror
+}                     Shift stack right
+~                     Pop and discard

@@ -3,7 +3,7 @@ Gol><>, the slightly golfier version of ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.3 (updated 12 Oct 2015)
+Version: 0.4 (updated 15 Oct 2015)
 """
 
 import codecs
@@ -375,13 +375,13 @@ class Golfish():
             self.push(elem3)
             self.push(elem1)
 
-        elif instruction == "A":
-            self._stack_num -= 1
-            self._curr_stack = self._stack_tape[self._stack_num]
-
         elif instruction == "B":
-            self._stack_num += 1
-            self._curr_stack = self._stack_tape[self._stack_num]
+            if self._loop_stack:
+                bookmark = self._loop_stack.pop()
+                self._pos = bookmark.jump_pos
+
+            else:
+                raise InvalidStateException("Break from non-loop")
 
         elif instruction == "C":
             if self._loop_stack:
@@ -389,7 +389,7 @@ class Golfish():
                 self._dir = self._loop_stack[-1].loop_dir[:]
 
             else:
-                raise InvalidStateException               
+                raise InvalidStateException("Continue from non-loop")       
 
         elif instruction == "D":
             raise InvalidStateException # Shouldn't reach here
@@ -467,7 +467,7 @@ class Golfish():
 
         elif instruction == "L":
             if not self._loop_stack or self._loop_stack[-1].limit is None:
-                raise InvalidStateException
+                raise InvalidStateException("Attempted counter push outside of for loop")
 
             else:
                 self.push(self._loop_stack[-1].counter) 
@@ -515,7 +515,7 @@ class Golfish():
                 bookmark = LoopBookmark(self.pos_before(), self._dir[:], [x, y])
                 self._loop_stack.append(bookmark)
 
-            if not self._curr_stack or self._curr_stack[-1] == 0:
+            if not self.peek():
                 bookmark = self._loop_stack.pop()
                 self._pos = bookmark.jump_pos
 
@@ -590,6 +590,10 @@ class Golfish():
 
         elif instruction == "r":
             self._curr_stack.reverse()
+
+        elif instruction == "s":
+            elem = self.pop()
+            self.push(elem + 16)
 
         elif instruction == "t":
             self._pos = self._bookmark_pos[:]
@@ -708,9 +712,6 @@ class Golfish():
             elem = self.pop()
             self.push(math.tan(elem))
 
-        elif instruction == "X":
-            self.push(random.random())
-
         elif instruction == "l":
             elem = chr(self.pop())
             self.push(ord(elem.lower()))
@@ -718,6 +719,9 @@ class Golfish():
         elif instruction == "u":
             elem = chr(self.pop())
             self.push(ord(elem.upper()))
+
+        elif instruction == "x":
+            self.push(random.random())
 
         else:
             raise NotImplementedError
@@ -737,6 +741,14 @@ class Golfish():
                 return self._curr_stack.pop()
             else:
                 return self._curr_stack.pop(index)
+
+        else:
+            return 0
+
+
+    def peek(self):
+        if self._curr_stack:
+            return self._curr_stack[-1]
 
         else:
             return 0
@@ -810,7 +822,7 @@ class Golfish():
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        print("Please include a filename")
+        print("Usage: <python 3 command> golfish.py [-d] <program file>", file=sys.stderr)
         exit()
         
     filename = sys.argv[-1]
