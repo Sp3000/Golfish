@@ -67,7 +67,7 @@ S     switch          Toggle functionality of next instruction
 SS    sin             Sine
 T     teleport-pad    Set teleport pad, saving pos/dir
 ST    tan             Tangent
-U     unction         Function call - pop y,x and jump to (x,y), saving pos/dir. Use C to return to original pos/dir.
+U     unction         Function call - pop y,x and jump to (x,y), saving pos/dir. Use B to return to original pos/dir.
 V     var             Pops element and saves to variable determined by next char
 W     while           While loop. Peeks at top for falsy value. Saves pos/dir. Turns right on completion.
 X     xponentiate     Exponentiation
