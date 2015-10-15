@@ -48,7 +48,7 @@ SC    cos             Cosine
 D     debug           Debug, outputting stack. Does not count as an instruction for conditionals/trampolines.
 E     eof-cond        Conditional: Pop and execute next if EOF (-1), else skip 1 and re-push. Essentially :m=? except it gets rid of the -1 as well.
 F     for             For loop. Pops n, number of loops. L is loop counter. Saves pos/dir. Turns right on completion.
-G        
+G     goto            Function call - pop y,x and jump to (x,y), saving pos/dir. Use B to return to original pos/dir.
 H     halt-char       Output stack as char until empty then halt
 I     input-pos       Numeric input: Read next non-negative int/float. Push -1 on EOF.
 SI    input-num       Numeric input: Read next int/float (possible negative). Change direction to down on EOF.
@@ -67,7 +67,7 @@ S     switch          Toggle functionality of next instruction
 SS    sin             Sine
 T     teleport-pad    Set teleport pad, saving pos/dir
 ST    tan             Tangent
-U     unction         Function call - pop y,x and jump to (x,y), saving pos/dir. Use B to return to original pos/dir.
+U                      
 V     var             Pops element and saves to variable determined by next char
 W     while           While loop. Peeks at top for falsy value. Saves pos/dir. Turns right on completion.
 X     xponentiate     Exponentiation
