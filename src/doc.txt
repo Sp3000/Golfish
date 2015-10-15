@@ -40,14 +40,14 @@ S=                    Round
 >                     Move right
 ?                     Conditional: pop and execute next if truthy, else skip 1
 @                     Rotate 3, moving 3rd down to top
-A        
+A                     
 SA    abs             Absolute value
 B     break           Break from loop
 C     continue        Continue loop, for F and W
 SC    cos             Cosine
 D     debug           Debug, outputting stack. Does not count as an instruction for conditionals/trampolines.
 E     eof-cond        Conditional: Pop and execute next if EOF (-1), else skip 1 and re-push. Essentially :m=? except it gets rid of the -1 as well.
-F     for             For loop. Pops n, number of loops. L is loop counter. Turns right on completion.
+F     for             For loop. Pops n, number of loops. L is loop counter. Saves pos/dir. Turns right on completion.
 G        
 H     halt-char       Output stack as char until empty then halt
 I     input-pos       Numeric input: Read next non-negative int/float. Push -1 on EOF.
@@ -58,24 +58,24 @@ L     loop-counter    Loop counter for F. Starts at zero.
 SL    log             Pop b,a and push log(a,b)
 M     minus-1         Minus 1
 N     num-out-nl      Output as num + trailing newline
-O        
+O                     
 P     plus-1          Plus 1
 SP    prime           Primality test
 Q     qmark-any       Conditional: Pop n, then pop and execute next if truthy, else skip n instructions
 R     repeat          Pop n, repeat next instruction n times (experimental)
 S     switch          Toggle functionality of next instruction
 SS    sin             Sine
-T     teleport-pad    Set teleport pad, saving direction
+T     teleport-pad    Set teleport pad, saving pos/dir
 ST    tan             Tangent
-U        
+U     unction         Function call - pop y,x and jump to (x,y), saving pos/dir. Use C to return to original pos/dir.
 V     var             Pops element and saves to variable determined by next char
-W     while           While loop. Peeks at top for falsy value. Turns right on completion.
+W     while           While loop. Peeks at top for falsy value. Saves pos/dir. Turns right on completion.
 X     xponentiate     Exponentiation
-Y        
+Y                     
 Z     zero-cond       Conditional: Pop and execute next if zero/falsy, else skip 1
-[                     Pop an element and push it to the stack to the left.
+[
 \                     Mirror
-]                     Pop an element and push it to the stack to the right.
+]
 ^                     Move up
 _                     Horizontal mirror
 `                     Escape next to char, pushing to stack
@@ -88,7 +88,7 @@ f     f-hex           Push 15
 g     get             Pop y, x and push char at (x, y)
 h     halt-num        Halt and output top of stack as num
 i     input-char      Read char
-j
+j                     
 k     kopy-nth        Get nth element down (top is 0). Indices wrap.
 l     length          Push length of stack
 Sl    lower           Lowercase
@@ -100,10 +100,10 @@ q     qmark-2         Conditional: pop and execute next if truthy, else skip 2 i
 r     reverse         Reverse stack
 s     sixteen         Pop n, push n+16
 t     teleport        Teleport to last teleport pad
-u        
+u                     
 Su    upper           Uppercase
 v                     Move down
-w        
+w                     
 x                     Random direction
 Sx    like x          Push random float in [0, 1)
 y        

@@ -3,7 +3,7 @@ Gol><>, the slightly golfier version of ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.3.5 (updated 15 Oct 2015)
+Version: 0.3.6 (updated 16 Oct 2015)
 """
 
 import codecs
@@ -50,16 +50,32 @@ class HaltProgram(Exception):
 class InvalidStateException(Exception):
     pass
 
-class LoopBookmark():
-    def __init__(self, loop_pos, loop_dir, limit=None):
-        self.loop_pos = loop_pos
-        self.loop_dir = loop_dir
 
-        self.counter = 0
+class Bookmark():
+    def __init__(self, pos, dir_):
+        self.pos = pos
+        self.dir = dir_
+
+
+class WhileBookmark(Bookmark):
+     def __init__(self, pos, dir_):
+         super().__init__(pos, dir_)
+
+
+class ForBookmark(Bookmark):
+    def __init__(self, pos, dir_, limit):
+        super().__init__(pos, dir_)
         self.limit = limit
+        self.counter = 0
 
     def increment_counter(self):
         self.counter += 1
+
+
+class FunctionBookmark(Bookmark):
+    def __init__(self, pos, dir_):
+        super().__init__(pos, dir_)
+
 
 class Golfish():
     def __init__(self, code="", input_=None, debug=False, online=False):
@@ -89,7 +105,7 @@ class Golfish():
         self._toggled = False # S
         self._skip = 0 # ?! and more
 
-        self._bookmark_pos = [-1, 0] # tT
+        self._bookmark_pos = [-1, 0] # tT, not the same as while/for bookmarks
         self._bookmark_dir = DIRECTIONS[">"]
 
         self._variable_map = {}
@@ -101,7 +117,7 @@ class Golfish():
 
         self._R_repeat = 1
 
-        self._loop_stack = []
+        self._bookmark_stack = []
 
     def run(self):        
         try:
@@ -375,16 +391,16 @@ class Golfish():
             self.push(elem1)
 
         elif instruction == "B":
-            if self._loop_stack:
-                self.loop_break()
-
+            if self._bookmark_stack:
+                self.bookmark_break()
             else:
-                raise InvalidStateException("Break from non-loop")
+                raise InvalidStateException("Break from non-loop/function")
 
         elif instruction == "C":
-            if self._loop_stack:
-                self._pos = self._loop_stack[-1].loop_pos[:]
-                self._dir = self._loop_stack[-1].loop_dir[:]
+            if self._bookmark_stack and (isinstance(self._bookmark_stack[-1], WhileBookmark)
+                                         or isinstance(self._bookmark_stack[-1], ForBookmark)):
+                self._pos = self._bookmark_stack[-1].pos[:]
+                self._dir = self._bookmark_stack[-1].dir[:]
 
             else:
                 raise InvalidStateException("Continue from non-loop")       
@@ -400,17 +416,19 @@ class Golfish():
                 self.push(elem)
 
         elif instruction == "F":
-            if self._loop_stack and self._loop_stack[-1].loop_pos == self.pos_before():
-                self._loop_stack[-1].increment_counter()
+            if self._bookmark_stack and self._bookmark_stack[-1].pos == self.pos_before():
+                self._bookmark_stack[-1].increment_counter()
                 
-            if not self._loop_stack or self._loop_stack[-1].loop_pos != self.pos_before():
+            else:
                 limit = self.pop()
                 
-                bookmark = LoopBookmark(self.pos_before(), self._dir[:], limit)
-                self._loop_stack.append(bookmark)
+                bookmark = ForBookmark(self.pos_before(), self._dir[:], limit)
+                self._bookmark_stack.append(bookmark)
 
-            if self._loop_stack and self._loop_stack[-1].counter >= self._loop_stack[-1].limit:
-                self.loop_break()
+            if (self._bookmark_stack and
+                self._bookmark_stack[-1].counter >= self._bookmark_stack[-1].limit):
+
+                self.bookmark_break()
 
         elif instruction == "H":
             while self._curr_stack:
@@ -460,11 +478,11 @@ class Golfish():
             self._curr_stack.extend(popped)
 
         elif instruction == "L":
-            if not self._loop_stack or self._loop_stack[-1].limit is None:
+            if not self._bookmark_stack or not isinstance(self._bookmark_stack[-1], ForBookmark):
                 raise InvalidStateException("Attempted counter push outside of for loop")
 
             else:
-                self.push(self._loop_stack[-1].counter) 
+                self.push(self._bookmark_stack[-1].counter) 
 
         elif instruction == "M":
             elem = self.pop()
@@ -496,18 +514,28 @@ class Golfish():
             self._bookmark_pos = self._pos[:]
             self._bookmark_dir = self._dir
 
+        elif instruction == "U":
+            if not self._bookmark_stack or self._bookmark_stack[-1].pos != self._pos:
+                bookmark = FunctionBookmark(self._pos[:], self._dir[:])
+                self._bookmark_stack.append(bookmark)
+
+                y = self.pop()
+                x = self.pop()
+
+                self._pos = [x, y]
+
         elif instruction == "V":
             self.move()
             char = self._board[self._pos[1]][self._pos[0]]
             self._variable_map[chr(char)] = self.pop()
 
         elif instruction == "W":
-            if not self._loop_stack or self._loop_stack[-1].loop_pos != self.pos_before():
-                bookmark = LoopBookmark(self.pos_before(), self._dir[:])
-                self._loop_stack.append(bookmark)
+            if not self._bookmark_stack or self._bookmark_stack[-1].pos != self.pos_before():
+                bookmark = WhileBookmark(self.pos_before(), self._dir[:])
+                self._bookmark_stack.append(bookmark)
 
             if not self.peek():
-                self.loop_break()
+                self.bookmark_break()
 
         elif instruction == "X":
             elem2 = self.pop()
@@ -752,13 +780,14 @@ class Golfish():
         self.push(self.pop(), index=0)
 
 
-    def loop_break(self):
-        bookmark = self._loop_stack.pop()
-        self._pos = bookmark.loop_pos
-        self._dir = bookmark.loop_dir[:]
-        self.move()
-
-        self._dir = [-self._dir[1], self._dir[0]] # Turn right
+    def bookmark_break(self):
+        bookmark = self._bookmark_stack.pop()
+        self._pos = bookmark.pos
+        self._dir = bookmark.dir
+        
+        if not isinstance(bookmark, FunctionBookmark):
+            self.move()
+            self._dir = [-self._dir[1], self._dir[0]] # Turn right
 
 
     def read_char(self):
