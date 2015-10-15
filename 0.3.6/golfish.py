@@ -3,7 +3,7 @@ Gol><>, the slightly golfier version of ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.3.7 (updated 16 Oct 2015)
+Version: 0.3.6 (updated 16 Oct 2015)
 """
 
 import codecs
@@ -403,7 +403,7 @@ class Golfish():
                 self._dir = self._bookmark_stack[-1].dir[:]
 
             else:
-                pass    
+                raise InvalidStateException("Continue from non-loop")       
 
         elif instruction == "D":
             raise InvalidStateException # Shouldn't reach here
