@@ -3,11 +3,11 @@ Gol><>, the slightly golfier version of ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.3 (updated 12 Oct 2015)
+Version: 0.3.6 (updated 16 Oct 2015)
 """
 
 import codecs
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 import sys
 
 try:
@@ -31,14 +31,14 @@ except ImportError:
 
 DIGITS = "0123456789abcdef"
 
-DIRECTIONS = {"^": (0, -1),
-              ">": (1, 0),
-              "v": (0, 1),
-              "<": (-1, 0)}
+DIRECTIONS = {'^': [0, -1],
+              '>': [1, 0],
+              'v': [0, 1],
+              '<': [-1, 0]}
 
-MIRRORS = {"/": lambda x,y: (-y, -x),
-           "\\": lambda x,y: (y, x),
-           "#": lambda x,y: (-x, -y)}
+MIRRORS = {'/': lambda x,y: [-y, -x],
+           '\\': lambda x,y: [y, x],
+           '#': lambda x,y: [-x, -y]}
 
 EOF = -1
 
@@ -51,8 +51,34 @@ class InvalidStateException(Exception):
     pass
 
 
+class Bookmark():
+    def __init__(self, pos, dir_):
+        self.pos = pos
+        self.dir = dir_
+
+
+class WhileBookmark(Bookmark):
+     def __init__(self, pos, dir_):
+         super().__init__(pos, dir_)
+
+
+class ForBookmark(Bookmark):
+    def __init__(self, pos, dir_, limit):
+        super().__init__(pos, dir_)
+        self.limit = limit
+        self.counter = 0
+
+    def increment_counter(self):
+        self.counter += 1
+
+
+class FunctionBookmark(Bookmark):
+    def __init__(self, pos, dir_):
+        super().__init__(pos, dir_)
+
+
 class Golfish():
-    def __init__(self, code, input_=None, debug=False, online=False):
+    def __init__(self, code="", input_=None, debug=False, online=False):
         rows = code.split("\n")
         self._board = defaultdict(lambda: defaultdict(int))
         x = y = 0
@@ -78,19 +104,11 @@ class Golfish():
 
         self._toggled = False # S
         self._skip = 0 # ?! and more
-        
-        self._push_char = False # `
 
-        self._escape = False
-        self._string_parse = False
-        self._parse_char = None # ' or "
-        self._parse_buffer = []
-
-        self._bookmark_pos = [-1, 0] # tT
+        self._bookmark_pos = [-1, 0] # tT, not the same as while/for bookmarks
         self._bookmark_dir = DIRECTIONS[">"]
 
         self._variable_map = {}
-        self._set_variable = False
 
         self._input = input_
         self._debug = debug
@@ -98,6 +116,8 @@ class Golfish():
         self._online = online
 
         self._R_repeat = 1
+
+        self._bookmark_stack = []
 
     def run(self):        
         try:
@@ -160,65 +180,25 @@ class Golfish():
 
         # Wrap around
         if self._pos[1] in self._board:
-            if self._dir == DIRECTIONS[">"] and self._pos[0] > max(self._board[self._pos[1]].keys()):
+            if self._dir == DIRECTIONS['>'] and self._pos[0] > max(self._board[self._pos[1]].keys()):
                 self._pos[0] = 0
 
-            elif self._dir == DIRECTIONS["<"] and self._pos[0] < 0:
+            elif self._dir == DIRECTIONS['<'] and self._pos[0] < 0:
                 self._pos[0] = max(self._board[self._pos[1]].keys())
 
-        elif self._dir == DIRECTIONS["v"] and self._pos[1] > max(self._board.keys()):
+        elif self._dir == DIRECTIONS['v'] and self._pos[1] > max(self._board.keys()):
             self._pos[1] = 0
         
-        elif self._dir == DIRECTIONS["^"] and self._pos[1] < 0:
+        elif self._dir == DIRECTIONS['^'] and self._pos[1] < 0:
             self._pos[1] = max(self._board.keys())
 
 
+    def pos_before(self):
+        return [self._pos[0] - self._dir[0], self._pos[1] - self._dir[1]]
+    
+
     def handle_instruction(self, char):
         instruction = chr(char)
-
-        if self._set_variable == True:
-            elem = self.pop()
-            self._variable_map[instruction] = elem
-            
-            self._set_variable = False
-            return
-
-        if instruction in self._variable_map:
-            self.push(self._variable_map[instruction])
-            return
-
-        if self._string_parse:
-            if self._escape:
-                escapes = {"`": ord("`"), "n": ord("\n"), "r": ord("\r")}
-                escapes.update({self._parse_char: ord(self._parse_char)})
-                
-                if instruction in escapes:
-                    self._parse_buffer.append(escapes[instruction])
-
-                else:
-                    self._parse_buffer.append(ord("`"))
-                    self._parse_buffer.append(char)
-
-                self._escape = False
-
-            else:
-                if instruction == self._parse_char:
-                    self._string_parse = False
-                    self._curr_stack.extend(self._parse_buffer)
-                    self._parse_buffer = []
-
-                elif instruction == '`':
-                    self._escape = True
-
-                else:
-                    self._parse_buffer.append(char)
-
-            return
-            
-        if self._push_char:
-            self.push(char)
-            self._push_char = False
-            return
 
         if instruction == "S" and not self._toggled:
             self._toggled = True
@@ -236,19 +216,34 @@ class Golfish():
         elif self._skip < 0:
             self._skip = 0
 
-        tmp_R_repeat, self._R_repeat = self._R_repeat, 1
+        tmp_R_repeat, self._R_repeat = int(self._R_repeat), 1
+        tmp_pos = self._pos[:]
         
         if self._toggled:
-            for _ in range(int(tmp_R_repeat)):
+            for _ in range(tmp_R_repeat):
+                self._pos = tmp_pos[:]
                 self.handle_switched_instruction(instruction)
                 
             self._toggled = False
 
         else:
-            for _ in range(int(tmp_R_repeat)):
-                self.handle_normal_instruction(instruction)
+            if tmp_R_repeat > 0:
+                for _ in range(tmp_R_repeat):
+                    self._pos = tmp_pos[:]
+                    self.handle_normal_instruction(instruction)
+
+            else:
+                # Special cases for 0R
+                if instruction in "'\"`":
+                    tmp_stack = self._curr_stack[:]
+                    self.handle_normal_instruction(instruction)
+                    self._curr_stack = tmp_stack
 
     def handle_normal_instruction(self, instruction):
+        if instruction in self._variable_map:
+            self.push(self._variable_map[instruction])
+            return
+
         if instruction in DIRECTIONS:
             self._dir = DIRECTIONS[instruction]
 
@@ -262,11 +257,40 @@ class Golfish():
             pass
 
         elif instruction == "!":
-            self._skip = 1
+            self._skip += 1
 
         elif instruction in '"\'':
-            self._string_parse = not self._string_parse
-            self._parse_char = instruction
+            escaped = False
+            parse_char = ord(instruction)
+            parse_buffer = []
+
+            self.move()
+            char = self._board[self._pos[1]][self._pos[0]]
+            
+            while escaped or char != parse_char:
+                if escaped:
+                    escapes = {ord(a): ord(b) for a,b in zip("`nr","`\n\r")}
+                    escapes.update({parse_char: parse_char})
+                    
+                    if char in escapes:
+                        parse_buffer.append(escapes[char])
+
+                    else:
+                        parse_buffer.append(ord('`'))
+                        parse_buffer.append(char)
+
+                    escaped = False
+
+                else:
+                    if char == ord('`'):
+                        escaped = True
+                    else:
+                        parse_buffer.append(char)
+
+                self.move()
+                char = self._board[self._pos[1]][self._pos[0]]
+
+            self._curr_stack.extend(parse_buffer)
 
         elif instruction == "$":
             elem2 = self.pop()
@@ -366,6 +390,21 @@ class Golfish():
             self.push(elem3)
             self.push(elem1)
 
+        elif instruction == "B":
+            if self._bookmark_stack:
+                self.bookmark_break()
+            else:
+                raise InvalidStateException("Break from non-loop/function")
+
+        elif instruction == "C":
+            if self._bookmark_stack and (isinstance(self._bookmark_stack[-1], WhileBookmark)
+                                         or isinstance(self._bookmark_stack[-1], ForBookmark)):
+                self._pos = self._bookmark_stack[-1].pos[:]
+                self._dir = self._bookmark_stack[-1].dir[:]
+
+            else:
+                raise InvalidStateException("Continue from non-loop")       
+
         elif instruction == "D":
             raise InvalidStateException # Shouldn't reach here
 
@@ -375,7 +414,22 @@ class Golfish():
             if elem != EOF:
                 self._skip = 1
                 self.push(elem)
-        
+
+        elif instruction == "F":
+            if self._bookmark_stack and self._bookmark_stack[-1].pos == self.pos_before():
+                self._bookmark_stack[-1].increment_counter()
+                
+            else:
+                limit = self.pop()
+                
+                bookmark = ForBookmark(self.pos_before(), self._dir[:], limit)
+                self._bookmark_stack.append(bookmark)
+
+            if (self._bookmark_stack and
+                self._bookmark_stack[-1].counter >= self._bookmark_stack[-1].limit):
+
+                self.bookmark_break()
+
         elif instruction == "H":
             while self._curr_stack:
                 elem = self.pop()
@@ -423,6 +477,13 @@ class Golfish():
             self._curr_stack.extend(popped)
             self._curr_stack.extend(popped)
 
+        elif instruction == "L":
+            if not self._bookmark_stack or not isinstance(self._bookmark_stack[-1], ForBookmark):
+                raise InvalidStateException("Attempted counter push outside of for loop")
+
+            else:
+                self.push(self._bookmark_stack[-1].counter) 
+
         elif instruction == "M":
             elem = self.pop()
             self.push(elem - 1)
@@ -453,8 +514,26 @@ class Golfish():
             self._bookmark_pos = self._pos[:]
             self._bookmark_dir = self._dir
 
+        elif instruction == "U":
+            bookmark = FunctionBookmark(self._pos[:], self._dir[:])
+            self._bookmark_stack.append(bookmark)
+
+            y = self.pop()
+            x = self.pop()
+            self._pos = [x, y]
+
         elif instruction == "V":
-            self._set_variable = True
+            self.move()
+            char = self._board[self._pos[1]][self._pos[0]]
+            self._variable_map[chr(char)] = self.pop()
+
+        elif instruction == "W":
+            if not self._bookmark_stack or self._bookmark_stack[-1].pos != self.pos_before():
+                bookmark = WhileBookmark(self.pos_before(), self._dir[:])
+                self._bookmark_stack.append(bookmark)
+
+            if not self.peek():
+                self.bookmark_break()
 
         elif instruction == "X":
             elem2 = self.pop()
@@ -473,7 +552,9 @@ class Golfish():
                 self._skip = 1
 
         elif instruction == "`":
-            self._push_char = not self._push_char
+            self.move()
+            char = self._board[self._pos[1]][self._pos[0]]
+            self.push(char)
 
         elif instruction == "g":
             y = self.pop()
@@ -526,6 +607,10 @@ class Golfish():
         elif instruction == "r":
             self._curr_stack.reverse()
 
+        elif instruction == "s":
+            elem = self.pop()
+            self.push(elem + 16)
+
         elif instruction == "t":
             self._pos = self._bookmark_pos[:]
             self._dir = self._bookmark_dir
@@ -539,14 +624,8 @@ class Golfish():
 
         elif instruction in "[]":
             elem = self.pop()
-            to_take = []
-
-            for _ in range(int(elem)):
-                to_take.append(self.pop())
-
-            self._stack_num += 1 if instruction == "]" else -1
-            self._curr_stack = self._stack_tape[self._stack_num]
-            self._curr_stack.extend(to_take[::-1])
+            offset = 1 if instruction == "]" else -1
+            self._stack_tape[self._stack_num + offset].append(elem)
 
         elif instruction == "{":
             self.rotate_left()
@@ -562,6 +641,10 @@ class Golfish():
 
 
     def handle_switched_instruction(self, instruction):
+
+        if instruction in DIGITS:
+            self.push(DIGITS.index(instruction) + 16)
+            
         if instruction == "%":
             elem2 = self.pop()
             elem1 = self.pop()
@@ -591,6 +674,10 @@ class Golfish():
         elif instruction == "=":
             elem = self.pop()
             self.push(round(elem))
+
+        elif instruction == "A":
+            elem = self.pop()
+            self.push(abs(elem))
 
         elif instruction == "C":
             elem = self.pop()
@@ -641,9 +728,6 @@ class Golfish():
             elem = self.pop()
             self.push(math.tan(elem))
 
-        elif instruction == "X":
-            self.push(random.random())
-
         elif instruction == "l":
             elem = chr(self.pop())
             self.push(ord(elem.lower()))
@@ -651,6 +735,9 @@ class Golfish():
         elif instruction == "u":
             elem = chr(self.pop())
             self.push(ord(elem.upper()))
+
+        elif instruction == "x":
+            self.push(random.random())
 
         else:
             raise NotImplementedError
@@ -675,12 +762,30 @@ class Golfish():
             return 0
 
 
+    def peek(self):
+        if self._curr_stack:
+            return self._curr_stack[-1]
+
+        else:
+            return 0
+
+
     def rotate_left(self):
         self.push(self.pop(index=0))
 
 
     def rotate_right(self):
         self.push(self.pop(), index=0)
+
+
+    def bookmark_break(self):
+        bookmark = self._bookmark_stack.pop()
+        self._pos = bookmark.pos[:]
+        self._dir = bookmark.dir[:]
+        
+        if not isinstance(bookmark, FunctionBookmark):
+            self.move()
+            self._dir = [-self._dir[1], self._dir[0]] # Turn right
 
 
     def read_char(self):
@@ -743,7 +848,7 @@ class Golfish():
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        print("Please include a filename")
+        print("Usage: <python 3 command> golfish.py [-d] <program file>", file=sys.stderr)
         exit()
         
     filename = sys.argv[-1]
