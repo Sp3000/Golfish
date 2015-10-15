@@ -709,7 +709,7 @@ class Golfish():
                 self.push(int(num) if num == int(num) else num)
 
             else:
-                self._dir = DIRECTIONS["v"]
+                self._dir = [-self._dir[1], self._dir[0]] # Turn right
 
         elif instruction == "L":
             elem2 = self.pop()
