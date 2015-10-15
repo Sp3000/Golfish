@@ -42,8 +42,8 @@ S=                    Round
 @                     Rotate 3, moving 3rd down to top
 A                     
 SA    abs             Absolute value
-B     break           Break from loop
-C     continue        Continue loop, for F and W
+B     break           Break from loop/functions
+C     continue        Continue loop, for F and W.
 SC    cos             Cosine
 D     debug           Debug, outputting stack. Does not count as an instruction for conditionals/trampolines.
 E     eof-cond        Conditional: Pop and execute next if EOF (-1), else skip 1 and re-push. Essentially :m=? except it gets rid of the -1 as well.

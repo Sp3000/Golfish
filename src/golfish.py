@@ -403,7 +403,7 @@ class Golfish():
                 self._dir = self._bookmark_stack[-1].dir[:]
 
             else:
-                pass    
+                raise InvalidStateException("Continue from non-loop")    
 
         elif instruction == "D":
             raise InvalidStateException # Shouldn't reach here
