@@ -7,7 +7,7 @@ Version: 0.3 (updated 12 Oct 2015)
 """
 
 import codecs
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 import sys
 
 try:
@@ -50,6 +50,17 @@ class HaltProgram(Exception):
 class InvalidStateException(Exception):
     pass
 
+class LoopBookmark():
+    def __init__(self, loop_pos, loop_dir, jump_pos, limit=None):
+        self.loop_pos = loop_pos
+        self.loop_dir = loop_dir
+        self.jump_pos = jump_pos
+
+        self.counter = 0
+        self.limit = limit
+
+    def increment_counter(self):
+        self.counter += 1
 
 class Golfish():
     def __init__(self, code="", input_=None, debug=False, online=False):
@@ -90,6 +101,8 @@ class Golfish():
         self._online = online
 
         self._R_repeat = 1
+
+        self._loop_stack = []
 
     def run(self):        
         try:
@@ -164,6 +177,10 @@ class Golfish():
         elif self._dir == DIRECTIONS["^"] and self._pos[1] < 0:
             self._pos[1] = max(self._board.keys())
 
+
+    def pos_before(self):
+        return [self._pos[0] - self._dir[0], self._pos[1] - self._dir[1]]
+    
 
     def handle_instruction(self, char):
         instruction = chr(char)
@@ -366,6 +383,14 @@ class Golfish():
             self._stack_num += 1
             self._curr_stack = self._stack_tape[self._stack_num]
 
+        elif instruction == "C":
+            if self._loop_stack:
+                self._pos = self._loop_stack[-1].loop_pos[:]
+                self._dir = self._loop_stack[-1].loop_dir[:]
+
+            else:
+                raise InvalidStateException               
+
         elif instruction == "D":
             raise InvalidStateException # Shouldn't reach here
 
@@ -375,6 +400,23 @@ class Golfish():
             if elem != EOF:
                 self._skip = 1
                 self.push(elem)
+
+        elif instruction == "F":
+            if self._loop_stack and self._loop_stack[-1].loop_pos == self.pos_before():
+                self._loop_stack[-1].increment_counter()
+                
+            if not self._loop_stack or self._loop_stack[-1].loop_pos != self.pos_before():
+                y = self.pop()
+                x = self.pop()
+                limit = self.pop()
+                
+                bookmark = LoopBookmark(self.pos_before(), self._dir[:], [x, y], limit)
+                self._loop_stack.append(bookmark)
+                self._C_counter = 0
+
+            if self._loop_stack and self._loop_stack[-1].counter >= self._loop_stack[-1].limit:
+                bookmark = self._loop_stack.pop()
+                self._pos = bookmark.jump_pos
         
         elif instruction == "H":
             while self._curr_stack:
@@ -423,6 +465,13 @@ class Golfish():
             self._curr_stack.extend(popped)
             self._curr_stack.extend(popped)
 
+        elif instruction == "L":
+            if not self._loop_stack or self._loop_stack[-1].limit is None:
+                raise InvalidStateException
+
+            else:
+                self.push(self._loop_stack[-1].counter) 
+
         elif instruction == "M":
             elem = self.pop()
             self.push(elem - 1)
@@ -457,6 +506,18 @@ class Golfish():
             self.move()
             char = self._board[self._pos[1]][self._pos[0]]
             self._variable_map[chr(char)] = self.pop()
+
+        elif instruction == "W":            
+            if not self._loop_stack or self._loop_stack[-1].loop_pos != self.pos_before():
+                y = self.pop()
+                x = self.pop()
+                
+                bookmark = LoopBookmark(self.pos_before(), self._dir[:], [x, y])
+                self._loop_stack.append(bookmark)
+
+            if not self._curr_stack or self._curr_stack[-1] == 0:
+                bookmark = self._loop_stack.pop()
+                self._pos = bookmark.jump_pos
 
         elif instruction == "X":
             elem2 = self.pop()
@@ -560,6 +621,10 @@ class Golfish():
 
 
     def handle_switched_instruction(self, instruction):
+
+        if instruction in DIGITS:
+            self.push(DIGITS.index(instruction) + 16)
+            
         if instruction == "%":
             elem2 = self.pop()
             elem1 = self.pop()
@@ -589,6 +654,10 @@ class Golfish():
         elif instruction == "=":
             elem = self.pop()
             self.push(round(elem))
+
+        elif instruction == "A":
+            elem = self.pop()
+            self.push(abs(elem))
 
         elif instruction == "C":
             elem = self.pop()

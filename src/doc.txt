@@ -38,20 +38,21 @@ S=       Round
 >        Move right
 ?        Conditional: pop and execute next if truthy, else skip 1
 @        Rotate 3, moving 3rd down to top
-A        Move left on the stack tape
-B        Move right on the stack tape
-C        <unimplemented: for loop counter>
+A        
+SA       Absolute value
+B        
+C        Continue loop, for F and W
 SC       Cosine
 D        Debug, outputting stack. Does not count as an instruction for conditionals/trampolines.
 E        Conditional: Pop and execute next if EOF (-1), else skip 1 and re-push. Essentially :m=? except it gets rid of the -1 as well.
-F        <unimplemented: for loop>
+F        For loop. Pops y,x,n - (x,y) are coordinates to jump to after loop, n is number of loops. C is loop counter.
 G        
 H        Output stack as char until empty then halt
 I        Numeric input: Read next non-negative int/float. Push -1 on EOF.
 SI       Numeric input: Read next int/float (possible negative). Change direction to down on EOF.
 J        Conditional jump: pop cond, y, x and jump to (x, y) if cond
 K        Multiple copy: Pop n and copy the top n elements
-L        <unimplemented: resume loop>
+L        Loop counter for F. Starts at zero.
 SL       Pop b,a and push log(a,b)
 M        Minus 1
 N        Output as num + trailing newline
@@ -66,7 +67,7 @@ T        Set teleport pad, saving direction
 ST       Tangent
 U        
 V        Pops element and saves to variable determined by next char
-W        <unimplemented: while loop>
+W        While loop. Pops y,x, (x,y) are coordinates to jump to after loop. Peeks at top for falsy value.
 X        Exponentiation
 SX       Push random float in [0, 1)
 Y        
