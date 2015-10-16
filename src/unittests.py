@@ -148,8 +148,8 @@ class TestGolfish(unittest.TestCase):
 
     def test_fibonacci_recursive(self):
         code = dedent("""\
-                      Im1Gh
-                      :3(?vM:Mm1G$m1G+B
+                      Im1AFh
+                      :3(?vM:MF$F+B
                        B1~<""")
 
         self.run_test((code, "1"), "1")
