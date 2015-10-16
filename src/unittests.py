@@ -87,9 +87,6 @@ class TestGolfish(unittest.TestCase):
     def test_Rarrow(self):
         self.run_test("123R>D;", "[1 2]\n")
 
-    def test_Rmirror(self):
-        self.run_test("12R|h", "[1 2]\n")
-
     def test_Rexclamation(self):
         self.run_test("120R!3h", "3")
         self.run_test("122R!456h", "6")
@@ -131,7 +128,7 @@ class TestGolfish(unittest.TestCase):
     def test_sorter(self):
         self.run_test((dedent("""\
                               iEv:2gP$2p
-                              Pt>0T:VC:2gRC:`}=3Q~rH"""), "Hello, World!"), " !,HWdellloor")
+                              Pt>0TVC:2gRC:`}=3Q~rH"""), "Hello, World!"), " !,HWdellloor")
 
     def test_jarvis(self):
         code = dedent("""\

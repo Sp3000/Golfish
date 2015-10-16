@@ -525,7 +525,10 @@ class Golfish():
         elif instruction == "V":
             self.move()
             char = self._board[self._pos[1]][self._pos[0]]
-            self._variable_map[chr(char)] = self.pop()
+
+            elem = self.pop()
+            self.push(elem)
+            self._variable_map[chr(char)] = elem
 
         elif instruction == "W":
             if not self._bookmark_stack or self._bookmark_stack[-1].pos != self.pos_before():
