@@ -68,7 +68,7 @@ SS    sin             Sine
 T     teleport-pad    Set teleport pad, saving pos/dir
 ST    tan             Tangent
 U                      
-V     var             Pops element and re-pushes it. Saves element to variable with name determined by next char.
+V     var             Pops element and re-pushes it. Saves element to variable with name determined by next char (don't pick L)
 W     while           While loop. Peeks at top for falsy value. Saves pos/dir. Moves downwards on completion.
 X     xponentiate     Exponentiation
 Y                     

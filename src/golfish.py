@@ -3,7 +3,7 @@ Gol><>, the slightly golfier version of ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.3.8 (updated 16 Oct 2015)
+Version: 0.3.9 (updated 16 Oct 2015)
 """
 
 import codecs
@@ -109,6 +109,7 @@ class Golfish():
         self._bookmark_dir = DIRECTIONS[">"]
 
         self._variable_map = {}
+        self._function_alias_map = {}
 
         self._input = input_
         self._debug = debug
@@ -239,9 +240,16 @@ class Golfish():
                     self.handle_normal_instruction(instruction)
                     self._curr_stack = tmp_stack
 
-    def handle_normal_instruction(self, instruction):
+    def handle_normal_instruction(self, instruction):        
         if instruction in self._variable_map:
             self.push(self._variable_map[instruction])
+            return
+
+        if instruction in self._function_alias_map:
+            bookmark = FunctionBookmark(self._pos[:], self._dir[:])
+            self._bookmark_stack.append(bookmark)
+            self._pos = self._function_alias_map[instruction][0][:]
+            self._dir = self._function_alias_map[instruction][1][:]
             return
 
         if instruction in DIRECTIONS:
@@ -390,6 +398,16 @@ class Golfish():
             self.push(elem3)
             self.push(elem1)
 
+        elif instruction == "A":
+            self.move()
+            char = chr(self._board[self._pos[1]][self._pos[0]])
+
+            y = self.pop()
+            x = self.pop()
+            self._function_alias_map[char] = [[x, y], self._dir[:]]
+
+            self.handle_normal_instruction(char)
+
         elif instruction == "B":
             if self._bookmark_stack:
                 self.bookmark_break()
@@ -429,14 +447,6 @@ class Golfish():
                 self._bookmark_stack[-1].counter >= self._bookmark_stack[-1].limit):
 
                 self.bookmark_break()
-
-        elif instruction == "G":
-            bookmark = FunctionBookmark(self._pos[:], self._dir[:])
-            self._bookmark_stack.append(bookmark)
-
-            y = self.pop()
-            x = self.pop()
-            self._pos = [x, y]
 
         elif instruction == "H":
             while self._curr_stack:
@@ -524,11 +534,11 @@ class Golfish():
 
         elif instruction == "V":
             self.move()
-            char = self._board[self._pos[1]][self._pos[0]]
+            char = chr(self._board[self._pos[1]][self._pos[0]])
 
             elem = self.pop()
             self.push(elem)
-            self._variable_map[chr(char)] = elem
+            self._variable_map[char] = elem
 
         elif instruction == "W":
             if not self._bookmark_stack or self._bookmark_stack[-1].pos != self.pos_before():
