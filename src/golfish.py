@@ -551,6 +551,11 @@ class Golfish():
             if condition:
                 self._skip = 1
 
+        elif instruction in "[]":
+            elem = self.pop()
+            offset = 1 if instruction == "]" else -1
+            self._stack_tape[self._stack_num + offset].append(elem)
+
         elif instruction == "`":
             self.move()
             char = self._board[self._pos[1]][self._pos[0]]
@@ -614,18 +619,21 @@ class Golfish():
         elif instruction == "t":
             self._pos = self._bookmark_pos[:]
             self._dir = self._bookmark_dir
+
+        elif instruction == "u":
+            self._stack_num += 1
+            self._curr_stack = self._stack_tape[self._stack_num]
                 
         elif instruction == "x":
             self._dir = random.choice(list(DIRECTIONS.values()))
 
+        elif instruction == "y":
+            self._stack_num -= 1
+            self._curr_stack = self._stack_tape[self._stack_num]
+
         elif instruction == "z":
             elem = self.pop()
             self.push(0 if elem else 1)
-
-        elif instruction in "[]":
-            elem = self.pop()
-            offset = 1 if instruction == "]" else -1
-            self._stack_tape[self._stack_num + offset].append(elem)
 
         elif instruction == "{":
             self.rotate_left()

@@ -82,6 +82,13 @@ class TestGolfish(unittest.TestCase):
     def test_Rspace(self):
         self.run_test("123R D;", "[1 2]\n")
         self.run_test("120R D;", "[1 2]\n")
+        self.run_test("5R 0D;", "[0]\n")
+
+    def test_Rarrow(self):
+        self.run_test("123R>D;", "[1 2]\n")
+
+    def test_Rmirror(self):
+        self.run_test("12R|h", "[1 2]\n")
 
     def test_Rexclamation(self):
         self.run_test("120R!3h", "3")
@@ -142,7 +149,7 @@ class TestGolfish(unittest.TestCase):
 
         self.run_test(code, '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \n0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 \n0 2 4 6 8 10 12 14 16 18 20 22 24 26 28 \n0 3 6 9 12 15 18 21 24 27 30 33 36 39 42 \n0 4 8 12 16 20 24 28 32 36 40 44 48 52 56 \n0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 \n0 6 12 18 24 30 36 42 48 54 60 66 72 78 84 \n0 7 14 21 28 35 42 49 56 63 70 77 84 91 98 \n0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 \n0 9 18 27 36 45 54 63 72 81 90 99 108 117 126 \n0 10 20 30 40 50 60 70 80 90 100 110 120 130 140 \n0 11 22 33 44 55 66 77 88 99 110 121 132 143 154 \n0 12 24 36 48 60 72 84 96 108 120 132 144 156 168 \n0 13 26 39 52 65 78 91 104 117 130 143 156 169 182 \n0 14 28 42 56 70 84 98 112 126 140 154 168 182 196 \n')
 
-    def test_fibonacci(self):
+    def test_fibonacci_recursive(self):
         code = dedent("""\
                       Im1Gh
                       :3(?vM:Mm1G$m1G+B
@@ -154,7 +161,9 @@ class TestGolfish(unittest.TestCase):
         self.run_test((code, "4"), "3")
         self.run_test((code, "5"), "5")
         self.run_test((code, "13"), "233")
-        
+
+    def test_large_number(self):
+        self.run_test("1234567890987654321rTlMZha*$+t", "1234567890987654321")        
         
     def run_test(self, prog, output):
         if isinstance(prog, str):

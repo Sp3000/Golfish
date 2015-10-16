@@ -77,7 +77,7 @@ Z     zero-cond       Conditional: Pop and execute next if zero/falsy, else skip
 \                     Mirror
 ]
 ^                     Move up
-_                     Horizontal mirror
+_                     
 `                     Escape next to char, pushing to stack
 a     a-hex           Push 10
 b     b-hex           Push 11
@@ -110,6 +110,6 @@ Sx    like x          Push random float in [0, 1)
 y        
 z     zero-eq         Is zero: Push 1 if zero, else 0
 {                     Shift stack left
-|                     Mirror
+|                     
 }                     Shift stack right
 ~                     Pop and discard
