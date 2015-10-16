@@ -42,12 +42,12 @@ S=                    Round
 @                     Rotate 3, moving 3rd down to top
 A                     
 SA    abs             Absolute value
-B     break           Break from loop
-C     continue        Continue loop, for F and W
+B     break           Break from loop/functions
+C     continue        Continue loop, for F and W.
 SC    cos             Cosine
 D     debug           Debug, outputting stack. Does not count as an instruction for conditionals/trampolines.
 E     eof-cond        Conditional: Pop and execute next if EOF (-1), else skip 1 and re-push. Essentially :m=? except it gets rid of the -1 as well.
-F     for             For loop. Pops n, number of loops. L is loop counter. Saves pos/dir. Turns right on completion.
+F     for             For loop. Pops n, number of loops. L is loop counter. Saves pos/dir. Moves downwards on completion.
 G     goto            Function call - pop y,x and jump to (x,y), saving pos/dir. Use B to return to original pos/dir.
 H     halt-char       Output stack as char until empty then halt
 I     input-pos       Numeric input: Read next non-negative int/float. Push -1 on EOF.
@@ -69,7 +69,7 @@ T     teleport-pad    Set teleport pad, saving pos/dir
 ST    tan             Tangent
 U                      
 V     var             Pops element and saves to variable determined by next char
-W     while           While loop. Peeks at top for falsy value. Saves pos/dir. Turns right on completion.
+W     while           While loop. Peeks at top for falsy value. Saves pos/dir. Moves downwards on completion.
 X     xponentiate     Exponentiation
 Y                     
 Z     zero-cond       Conditional: Pop and execute next if zero/falsy, else skip 1
@@ -77,7 +77,7 @@ Z     zero-cond       Conditional: Pop and execute next if zero/falsy, else skip
 \                     Mirror
 ]
 ^                     Move up
-_                     Horizontal mirror
+_                     
 `                     Escape next to char, pushing to stack
 a     a-hex           Push 10
 b     b-hex           Push 11
@@ -94,6 +94,7 @@ l     length          Push length of stack
 Sl    lower           Lowercase
 m     minus-1         Push -1
 n     num-out         Output as num
+Sn    num-rounding    Pop d, n and output n rounded to d decimal places
 o     out-char        Output as char
 p     put             Pop y, x, char and put char at (x, y)
 q     qmark-2         Conditional: pop and execute next if truthy, else skip 2 instructions
@@ -109,6 +110,6 @@ Sx    like x          Push random float in [0, 1)
 y        
 z     zero-eq         Is zero: Push 1 if zero, else 0
 {                     Shift stack left
-|                     Mirror
+|                     
 }                     Shift stack right
 ~                     Pop and discard

@@ -77,7 +77,7 @@ Z     zero-cond       Conditional: Pop and execute next if zero/falsy, else skip
 \                     Mirror
 ]
 ^                     Move up
-_                     Horizontal mirror
+_                     
 `                     Escape next to char, pushing to stack
 a     a-hex           Push 10
 b     b-hex           Push 11
@@ -94,6 +94,7 @@ l     length          Push length of stack
 Sl    lower           Lowercase
 m     minus-1         Push -1
 n     num-out         Output as num
+Sn    num-rounding    Pop d, n and output n rounded to d decimal places
 o     out-char        Output as char
 p     put             Pop y, x, char and put char at (x, y)
 q     qmark-2         Conditional: pop and execute next if truthy, else skip 2 instructions
@@ -109,6 +110,6 @@ Sx    like x          Push random float in [0, 1)
 y        
 z     zero-eq         Is zero: Push 1 if zero, else 0
 {                     Shift stack left
-|                     Mirror
+|                     
 }                     Shift stack right
 ~                     Pop and discard
