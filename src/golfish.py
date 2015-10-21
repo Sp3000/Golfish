@@ -3,7 +3,7 @@ Gol><>, the slightly golfier version of ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.3.9 (updated 16 Oct 2015)
+Version: 0.3.10 (updated 17 Oct 2015)
 """
 
 import codecs
@@ -206,7 +206,7 @@ class Golfish():
             return
 
         if instruction == "D":
-            self.output(str(self._curr_stack).replace(",", "") + "\n")
+            print(str(self._curr_stack).replace(",", "") + "\n", file=sys.stderr)
             return
 
         if self._skip > 0:
@@ -454,29 +454,7 @@ class Golfish():
             self.halt()
 
         elif instruction == "I":
-            num = ""
-            dots = 0
-            char = self.read_char()
-
-            while char >= 0 and chr(char) not in "0123456789.":
-                char = self.read_char()
-
-            while char >= 0 and chr(char) in "0123456789.":
-                if char == ord(".") and dots > 0:
-                    break
-
-                num += chr(char)
-                dots += (char == ord("."))
-                char = self.read_char()
-
-            self._input_buffer = char
-
-            if num:
-                num = float(num)
-                self.push(int(num) if num == int(num) else num)
-
-            else:
-                self.push(-1)
+            self.read_num(si=False)
 
         elif instruction == "J":
             y = self.pop()
@@ -703,32 +681,7 @@ class Golfish():
             self.push(math.cos(elem))
 
         elif instruction == "I":
-            num = ""
-            dots = 0
-            char = self.read_char()
-
-            while char >= 0 and chr(char) not in "-0123456789.":
-                char = self.read_char()
-
-            while char >= 0 and chr(char) in "-0123456789.":
-                if char == ord(".") and dots > 0:
-                    break
-
-                if char == ord("-") and num:
-                    break
-
-                num += chr(char)
-                dots += (char == ord("."))
-                char = self.read_char()
-
-            self._input_buffer = char
-
-            if num:
-                num = float(num)
-                self.push(int(num) if num == int(num) else num)
-
-            else:
-                self._dir = DIRECTIONS["v"]
+            self.read_num(si=True)
 
         elif instruction == "L":
             elem2 = self.pop()
@@ -839,6 +792,37 @@ class Golfish():
 
             else:
                 return EOF
+
+    def read_num(self, si=False):
+        num = ""
+        dots = 0
+        char = self.read_char()
+
+        while char >= 0 and chr(char) not in "-0123456789.":
+            char = self.read_char()
+
+        while char >= 0 and chr(char) in "-0123456789.":
+            if char == ord(".") and dots > 0:
+                break
+
+            if char == ord("-") and num:
+                break
+
+            num += chr(char)
+            dots += (char == ord("."))
+            char = self.read_char()
+
+        self._input_buffer = char
+
+        if num:
+            num = float(num)
+            self.push(int(num) if num == int(num) else num)
+
+        else:
+            if si:
+                self._dir = DIRECTIONS["v"]
+            else:
+                self.push(-1)
 
 
     def output(self, out):

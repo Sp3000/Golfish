@@ -87,10 +87,74 @@ class TestGolfish(unittest.TestCase):
     def test_Rarrow(self):
         self.run_test("123R>D;", "[1 2]\n")
 
+    def test_Rmirror(self):
+        self.run_test(dedent("""\
+                             0R\\1n;
+                               >2n;"""), "1")
+        
+        self.run_test(dedent("""\
+                             4R\\1n;
+                               >2n;"""), "1")
+        
+        self.run_test(dedent("""\
+                             5R\\1n;
+                               >2n;"""), "2")
+
+        self.run_test(dedent("""\
+                             4R/1n;
+                               >2n;"""), "1")
+
+        self.run_test(dedent("""\
+                             5R/1n;
+                               >2n;"""), "2")
+
     def test_Rexclamation(self):
         self.run_test("120R!3h", "3")
         self.run_test("122R!456h", "6")
         self.run_test("123R!456h", "2")
+
+    def test_Rquestion(self):
+        self.run_test(dedent("""\
+                             00R?v0n;
+                                 >1n;"""), "1")
+
+        self.run_test(dedent("""\
+                             01R?v0n;
+                                 >1n;"""), "0")
+
+        self.run_test(dedent("""\
+                             11R?v0n;
+                                 >1n;"""), "1")
+
+        self.run_test(dedent("""\
+                             101105R?v0n;
+                                     >1n;"""), "0")
+
+        self.run_test(dedent("""\
+                             111115R?v0n;
+                                     >1n;"""), "1")
+
+    def test_RZ(self):
+        self.run_test(dedent("""\
+                             00RZv0n;
+                                 >1n;"""), "1")
+
+        self.run_test(dedent("""\
+                             11RZv0n;
+                                 >1n;"""), "0")
+        
+        self.run_test(dedent("""\
+                             01RZv0n;
+                                 >1n;"""), "1")
+
+        self.run_test(dedent("""\
+                             101105RZv0n;
+                                     >1n;"""), "0")
+
+        self.run_test(dedent("""\
+                             000005RZv0n;
+                                     >1n;"""), "1")
+
 
     def test_Rquote(self):
         self.run_test("0R'abc'H", "")
@@ -161,7 +225,16 @@ class TestGolfish(unittest.TestCase):
 
     def test_large_number(self):
         self.run_test("1234567890987654321rTlMZha*$+t", "1234567890987654321")        
-        
+
+    def test_hex(self):
+        code = dedent("""\
+                      I:?v0h>m1.
+                      @S,>:?v~H
+                      :%K2s0/@+&~~&k&"W0"&(a""")
+
+        for n in range(500):
+            self.run_test((code, str(n)), hex(n)[2:])
+
     def run_test(self, prog, output):
         if isinstance(prog, str):
             gf = Golfish(prog)
