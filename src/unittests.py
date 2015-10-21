@@ -232,8 +232,16 @@ class TestGolfish(unittest.TestCase):
                       @S,>:?v~H
                       :%K2s0/@+&~~&k&"W0"&(a""")
 
-        for n in range(500):
+        for n in range(50):
             self.run_test((code, str(n)), hex(n)[2:])
+
+    def test_partial(self):
+        code = dedent("""\
+                      SI
+                      C>rFlMF:}+
+                      NRl<C}<;""")
+
+        self.run_test((code, "3 | -3, 4, 7, -1, 15"), "-3\n-5\n1\n14\n49\n")
 
     def run_test(self, prog, output):
         if isinstance(prog, str):

@@ -26,7 +26,6 @@ import traceback
 
 try:
     from library import *
-
 except ImportError:
     from .library import *
 
@@ -426,7 +425,7 @@ class Golfish():
                                          or isinstance(self._bookmark_stack[-1], ForBookmark)):
                 bookmark = self._bookmark_stack[-1]
                 self._pos = bookmark.pos[:]
-                self._pos = bookmark.dir[:]
+                self._dir = bookmark.dir[:]
 
                 if isinstance(bookmark, WhileBookmark) and bookmark.w_marker:
                         self._pos = bookmark.w_marker[0][:]
