@@ -237,9 +237,9 @@ class TestGolfish(unittest.TestCase):
 
     def run_test(self, prog, output):
         if isinstance(prog, str):
-            gf = Golfish(prog)
+            gf = Golfish(prog, online=True)
         else:
-            gf = Golfish(*prog)
+            gf = Golfish(*prog, online=True)
 
         gf.run()
         self.assertEqual(self.output(), output)   

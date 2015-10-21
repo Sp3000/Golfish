@@ -3,7 +3,7 @@ Gol><>, the slightly golfier version of ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.3.10 (updated 17 Oct 2015)
+Version: 0.3.10 (updated 21 Oct 2015)
 """
 
 import codecs
@@ -26,6 +26,7 @@ import traceback
 
 try:
     from library import *
+
 except ImportError:
     from .library import *
 
@@ -206,7 +207,13 @@ class Golfish():
             return
 
         if instruction == "D":
-            print(str(self._curr_stack).replace(",", "") + "\n", file=sys.stderr)
+            output = str(self._curr_stack).replace(",", "")
+
+            if self._online:
+                print(output, file=sys.stdout)
+            else:
+                print(output, file=sys.stderr)
+
             return
 
         if self._skip > 0:
