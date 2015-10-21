@@ -69,7 +69,7 @@ T     teleport-pad    Set teleport pad, saving pos/dir
 ST    tan             Tangent
 U                      
 V     var             Pops element and re-pushes it. Saves element to variable with name determined by next char (don't pick L).
-W     while           While loop. Peeks at top for falsy value. Saves pos/dir. Moves downwards on completion.
+W     while           While loop. Peeks at top for falsy value. Saves pos/dir. Moves downwards on completion. Modifiable with w instruction.
 X     xponentiate     Exponentiation
 Y                     
 Z     zero-cond       Conditional: Pop and execute next if zero/falsy, else skip 1
@@ -104,7 +104,7 @@ t     teleport        Teleport to last teleport pad
 u                     
 Su    upper           Uppercase
 v                     Move down
-w                     
+w     while-cond      Modifies the next W instruction to be a while(cond) that pops the condition. C teleports to this position instead.
 x                     Random direction
 Sx    like x          Push random float in [0, 1)
 y        
