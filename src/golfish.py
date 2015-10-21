@@ -59,8 +59,9 @@ class Bookmark():
 
 
 class WhileBookmark(Bookmark):
-     def __init__(self, pos, dir_):
+     def __init__(self, pos, dir_, w_marker):
          super().__init__(pos, dir_)
+         self.w_marker = w_marker
 
 
 class ForBookmark(Bookmark):
@@ -120,6 +121,7 @@ class Golfish():
         self._R_repeat = 1
 
         self._bookmark_stack = []
+        self._w_marker = None
 
     def run(self):        
         try:
@@ -422,8 +424,13 @@ class Golfish():
         elif instruction == "C":
             if self._bookmark_stack and (isinstance(self._bookmark_stack[-1], WhileBookmark)
                                          or isinstance(self._bookmark_stack[-1], ForBookmark)):
-                self._pos = self._bookmark_stack[-1].pos[:]
-                self._dir = self._bookmark_stack[-1].dir[:]
+                bookmark = self._bookmark_stack[-1]
+                self._pos = bookmark.pos[:]
+                self._pos = bookmark.dir[:]
+
+                if isinstance(bookmark, WhileBookmark) and bookmark.w_marker:
+                        self._pos = bookmark.w_marker[0][:]
+                        self._dir = bookmark.w_marker[1][:]
 
             else:
                 raise InvalidStateException("Continue from non-loop")    
@@ -525,10 +532,16 @@ class Golfish():
 
         elif instruction == "W":
             if not self._bookmark_stack or self._bookmark_stack[-1].pos != self.pos_before():
-                bookmark = WhileBookmark(self.pos_before(), self._dir[:])
+                bookmark = WhileBookmark(self.pos_before(), self._dir[:], self._w_marker)
                 self._bookmark_stack.append(bookmark)
+                self._w_marker = None
 
-            if not self.peek():
+            if self._bookmark_stack[-1].w_marker:
+                checker = self.pop
+            else:
+                checker = self.peek
+                
+            if not checker():
                 self.bookmark_break()
 
         elif instruction == "X":
@@ -619,6 +632,9 @@ class Golfish():
         elif instruction == "u":
             self._stack_num += 1
             self._curr_stack = self._stack_tape[self._stack_num]
+
+        elif instruction == "w":
+            self._w_marker = [self._pos[:], self._dir[:]]
                 
         elif instruction == "x":
             self._dir = random.choice(list(DIRECTIONS.values()))
