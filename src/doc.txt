@@ -40,19 +40,18 @@ S=                    Round
 >                     Move right
 ?                     Conditional: pop and execute next if truthy, else skip 1
 @                     Rotate 3, moving 3rd down to top
-A     alias           Pops y,x and saves [x,y] as the start of a function, along with current direction. Function name is determined by next char.
-                      The function is then immediately executed. Use B to break/return from function.
+A     alias           Pops y,x and saves [x,y] as the start of a function, along with current direction. Function name is determined by next char. Use B to break/return from function.
 SA    abs             Absolute value
 B     break           Break from loop/return from function
 C     continue        Continue loop, for F and W.
 SC    cos             Cosine
-D     debug           Debug, outputting stack. Does not count as an instruction for conditionals/trampolines.
+D     debug           Debug, outputting stack to STDERR. Does not count as an instruction for conditionals/trampolines.
 E     eof-cond        Conditional: Pop and execute next if EOF (-1), else skip 1 and re-push. Essentially :m=? except it gets rid of the -1 as well.
 F     for             For loop. Pops n, number of loops. L is loop counter. Saves pos/dir. Moves downwards on completion.
 G
 H     halt-char       Output stack as char until empty then halt
-I     input-pos       Numeric input: Read next non-negative int/float. Push -1 on EOF.
-SI    input-num       Numeric input: Read next int/float (possible negative). Change direction to down on EOF.
+I     input-pos       Numeric input: Read next int/float. Push -1 on EOF (if -1 could be in the input, use SI instead)
+SI    input-num       Numeric input: Read next int/float. Change direction to down on EOF.
 J     jump-cond       Conditional jump: pop cond, y, x and jump to (x, y) if cond
 K     kopy-n          Multiple copy: Pop n and copy the top n elements
 L     loop-counter    Loop counter for F. Starts at zero.
@@ -70,7 +69,7 @@ T     teleport-pad    Set teleport pad, saving pos/dir
 ST    tan             Tangent
 U                      
 V     var             Pops element and re-pushes it. Saves element to variable with name determined by next char (don't pick L).
-W     while           While loop. Peeks at top for falsy value. Saves pos/dir. Moves downwards on completion.
+W     while           While loop. Peeks at top for falsy value. Saves pos/dir. Moves downwards on completion. Modifiable with w instruction.
 X     xponentiate     Exponentiation
 Y                     
 Z     zero-cond       Conditional: Pop and execute next if zero/falsy, else skip 1
@@ -105,7 +104,7 @@ t     teleport        Teleport to last teleport pad
 u                     
 Su    upper           Uppercase
 v                     Move down
-w                     
+w     while-cond      Modifies the next W instruction to be a while(cond) that pops the condition. C teleports to this position instead.
 x                     Random direction
 Sx    like x          Push random float in [0, 1)
 y        

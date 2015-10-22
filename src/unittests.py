@@ -4,6 +4,7 @@ from textwrap import dedent
 import unittest
 
 from golfish import Golfish
+from library import *
 
 class TestGolfish(unittest.TestCase):
     def setUp(self):
@@ -87,10 +88,74 @@ class TestGolfish(unittest.TestCase):
     def test_Rarrow(self):
         self.run_test("123R>D;", "[1 2]\n")
 
+    def test_Rmirror(self):
+        self.run_test(dedent("""\
+                             0R\\1n;
+                               >2n;"""), "1")
+        
+        self.run_test(dedent("""\
+                             4R\\1n;
+                               >2n;"""), "1")
+        
+        self.run_test(dedent("""\
+                             5R\\1n;
+                               >2n;"""), "2")
+
+        self.run_test(dedent("""\
+                             4R/1n;
+                               >2n;"""), "1")
+
+        self.run_test(dedent("""\
+                             5R/1n;
+                               >2n;"""), "2")
+
     def test_Rexclamation(self):
         self.run_test("120R!3h", "3")
         self.run_test("122R!456h", "6")
         self.run_test("123R!456h", "2")
+
+    def test_Rquestion(self):
+        self.run_test(dedent("""\
+                             00R?v0n;
+                                 >1n;"""), "1")
+
+        self.run_test(dedent("""\
+                             01R?v0n;
+                                 >1n;"""), "0")
+
+        self.run_test(dedent("""\
+                             11R?v0n;
+                                 >1n;"""), "1")
+
+        self.run_test(dedent("""\
+                             101105R?v0n;
+                                     >1n;"""), "0")
+
+        self.run_test(dedent("""\
+                             111115R?v0n;
+                                     >1n;"""), "1")
+
+    def test_RZ(self):
+        self.run_test(dedent("""\
+                             00RZv0n;
+                                 >1n;"""), "1")
+
+        self.run_test(dedent("""\
+                             11RZv0n;
+                                 >1n;"""), "0")
+        
+        self.run_test(dedent("""\
+                             01RZv0n;
+                                 >1n;"""), "1")
+
+        self.run_test(dedent("""\
+                             101105RZv0n;
+                                     >1n;"""), "0")
+
+        self.run_test(dedent("""\
+                             000005RZv0n;
+                                     >1n;"""), "1")
+
 
     def test_Rquote(self):
         self.run_test("0R'abc'H", "")
@@ -125,6 +190,15 @@ class TestGolfish(unittest.TestCase):
     def test_primes(self):
         self.run_test("P:` )?;:SPq:N", "2\n3\n5\n7\n11\n13\n17\n19\n23\n29\n31\n")
 
+    def test_primes2(self):
+        code = dedent("""\
+                      I:2(q0h\\
+                      2W)K2w2/CPh0qz%K
+                      h>1""")
+
+        for n in range(30):
+            self.run_test((code, str(n)), str(int(is_probably_prime(n))))
+        
     def test_sorter(self):
         self.run_test((dedent("""\
                               iEv:2gP$2p
@@ -148,7 +222,7 @@ class TestGolfish(unittest.TestCase):
 
     def test_fibonacci_recursive(self):
         code = dedent("""\
-                      Im1AFh
+                      M1AFIFh
                       :3(?vM:MF$F+B
                        B1~<""")
 
@@ -161,12 +235,29 @@ class TestGolfish(unittest.TestCase):
 
     def test_large_number(self):
         self.run_test("1234567890987654321rTlMZha*$+t", "1234567890987654321")        
-        
+
+    def test_hex(self):
+        code = dedent("""\
+                      I:?v0h>m1.
+                      @S,>:?v~H
+                      :%K2s0/@+&~~&k&"W0"&(a""")
+
+        for n in range(50):
+            self.run_test((code, str(n)), hex(n)[2:])
+
+    def test_partial(self):
+        code = dedent("""\
+                      SI
+                      C>rFlMF:}+
+                      NRl<C}<;""")
+
+        self.run_test((code, "3 | -3, 4, 7, -1, 15"), "-3\n-5\n1\n14\n49\n")
+
     def run_test(self, prog, output):
         if isinstance(prog, str):
-            gf = Golfish(prog)
+            gf = Golfish(prog, online=True)
         else:
-            gf = Golfish(*prog)
+            gf = Golfish(*prog, online=True)
 
         gf.run()
         self.assertEqual(self.output(), output)   

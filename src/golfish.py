@@ -3,7 +3,7 @@ Gol><>, the slightly golfier version of ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.3.9 (updated 16 Oct 2015)
+Version: 0.3.10 (updated 22 Oct 2015)
 """
 
 import codecs
@@ -58,8 +58,9 @@ class Bookmark():
 
 
 class WhileBookmark(Bookmark):
-     def __init__(self, pos, dir_):
+     def __init__(self, pos, dir_, w_marker):
          super().__init__(pos, dir_)
+         self.w_marker = w_marker
 
 
 class ForBookmark(Bookmark):
@@ -119,6 +120,7 @@ class Golfish():
         self._R_repeat = 1
 
         self._bookmark_stack = []
+        self._w_marker = None
 
     def run(self):        
         try:
@@ -206,7 +208,13 @@ class Golfish():
             return
 
         if instruction == "D":
-            self.output(str(self._curr_stack).replace(",", "") + "\n")
+            output = str(self._curr_stack).replace(",", "")
+
+            if self._online:
+                print(output, file=sys.stdout)
+            else:
+                print(output, file=sys.stderr)
+
             return
 
         if self._skip > 0:
@@ -406,8 +414,6 @@ class Golfish():
             x = self.pop()
             self._function_alias_map[char] = [[x, y], self._dir[:]]
 
-            self.handle_normal_instruction(char)
-
         elif instruction == "B":
             if self._bookmark_stack:
                 self.bookmark_break()
@@ -417,8 +423,13 @@ class Golfish():
         elif instruction == "C":
             if self._bookmark_stack and (isinstance(self._bookmark_stack[-1], WhileBookmark)
                                          or isinstance(self._bookmark_stack[-1], ForBookmark)):
-                self._pos = self._bookmark_stack[-1].pos[:]
-                self._dir = self._bookmark_stack[-1].dir[:]
+                bookmark = self._bookmark_stack[-1]
+                self._pos = bookmark.pos[:]
+                self._dir = bookmark.dir[:]
+
+                if isinstance(bookmark, WhileBookmark) and bookmark.w_marker:
+                        self._pos = bookmark.w_marker[0][:]
+                        self._dir = bookmark.w_marker[1][:]
 
             else:
                 raise InvalidStateException("Continue from non-loop")    
@@ -456,29 +467,7 @@ class Golfish():
             self.halt()
 
         elif instruction == "I":
-            num = ""
-            dots = 0
-            char = self.read_char()
-
-            while char >= 0 and chr(char) not in "0123456789.":
-                char = self.read_char()
-
-            while char >= 0 and chr(char) in "0123456789.":
-                if char == ord(".") and dots > 0:
-                    break
-
-                num += chr(char)
-                dots += (char == ord("."))
-                char = self.read_char()
-
-            self._input_buffer = char
-
-            if num:
-                num = float(num)
-                self.push(int(num) if num == int(num) else num)
-
-            else:
-                self.push(-1)
+            self.read_num(si=False)
 
         elif instruction == "J":
             y = self.pop()
@@ -542,10 +531,16 @@ class Golfish():
 
         elif instruction == "W":
             if not self._bookmark_stack or self._bookmark_stack[-1].pos != self.pos_before():
-                bookmark = WhileBookmark(self.pos_before(), self._dir[:])
+                bookmark = WhileBookmark(self.pos_before(), self._dir[:], self._w_marker)
                 self._bookmark_stack.append(bookmark)
+                self._w_marker = None
 
-            if not self.peek():
+            if self._bookmark_stack[-1].w_marker:
+                checker = self.pop
+            else:
+                checker = self.peek
+                
+            if not checker():
                 self.bookmark_break()
 
         elif instruction == "X":
@@ -636,6 +631,9 @@ class Golfish():
         elif instruction == "u":
             self._stack_num += 1
             self._curr_stack = self._stack_tape[self._stack_num]
+
+        elif instruction == "w":
+            self._w_marker = [self._pos[:], self._dir[:]]
                 
         elif instruction == "x":
             self._dir = random.choice(list(DIRECTIONS.values()))
@@ -705,32 +703,7 @@ class Golfish():
             self.push(math.cos(elem))
 
         elif instruction == "I":
-            num = ""
-            dots = 0
-            char = self.read_char()
-
-            while char >= 0 and chr(char) not in "-0123456789.":
-                char = self.read_char()
-
-            while char >= 0 and chr(char) in "-0123456789.":
-                if char == ord(".") and dots > 0:
-                    break
-
-                if char == ord("-") and num:
-                    break
-
-                num += chr(char)
-                dots += (char == ord("."))
-                char = self.read_char()
-
-            self._input_buffer = char
-
-            if num:
-                num = float(num)
-                self.push(int(num) if num == int(num) else num)
-
-            else:
-                self._dir = DIRECTIONS["v"]
+            self.read_num(si=True)
 
         elif instruction == "L":
             elem2 = self.pop()
@@ -841,6 +814,37 @@ class Golfish():
 
             else:
                 return EOF
+
+    def read_num(self, si=False):
+        num = ""
+        dots = 0
+        char = self.read_char()
+
+        while char >= 0 and chr(char) not in "-0123456789.":
+            char = self.read_char()
+
+        while char >= 0 and chr(char) in "-0123456789.":
+            if char == ord(".") and dots > 0:
+                break
+
+            if char == ord("-") and num:
+                break
+
+            num += chr(char)
+            dots += (char == ord("."))
+            char = self.read_char()
+
+        self._input_buffer = char
+
+        if num:
+            num = float(num)
+            self.push(int(num) if num == int(num) else num)
+
+        else:
+            if si:
+                self._dir = DIRECTIONS["v"]
+            else:
+                self.push(-1)
 
 
     def output(self, out):

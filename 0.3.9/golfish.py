@@ -406,8 +406,6 @@ class Golfish():
             x = self.pop()
             self._function_alias_map[char] = [[x, y], self._dir[:]]
 
-            self.handle_normal_instruction(char)
-
         elif instruction == "B":
             if self._bookmark_stack:
                 self.bookmark_break()
