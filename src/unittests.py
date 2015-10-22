@@ -4,6 +4,7 @@ from textwrap import dedent
 import unittest
 
 from golfish import Golfish
+from library import *
 
 class TestGolfish(unittest.TestCase):
     def setUp(self):
@@ -189,6 +190,15 @@ class TestGolfish(unittest.TestCase):
     def test_primes(self):
         self.run_test("P:` )?;:SPq:N", "2\n3\n5\n7\n11\n13\n17\n19\n23\n29\n31\n")
 
+    def test_primes2(self):
+        code = dedent("""\
+                      I:2(q0h\\
+                      2W)K2w2/CPh0qz%K
+                      h>1""")
+
+        for n in range(30):
+            self.run_test((code, str(n)), str(int(is_probably_prime(n))))
+        
     def test_sorter(self):
         self.run_test((dedent("""\
                               iEv:2gP$2p
