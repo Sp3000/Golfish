@@ -80,6 +80,15 @@ class TestGolfish(unittest.TestCase):
         
         self.run_test(grid, "103")
 
+    def test_k(self):
+        self.run_test("123450kh", "5")
+        self.run_test("123451kh", "4")
+        self.run_test("123452kh", "3")
+        self.run_test("12345mkh", "1")
+        self.run_test("12345akh", "5")
+        self.run_test("1234503-kh", "3")
+        self.run_test("123450a-kh", "5")
+
     def test_Rspace(self):
         self.run_test("123R D;", "[1 2]\n")
         self.run_test("120R D;", "[1 2]\n")
@@ -252,6 +261,14 @@ class TestGolfish(unittest.TestCase):
                       NRl<C}<;""")
 
         self.run_test((code, "3 | -3, 4, 7, -1, 15"), "-3\n-5\n1\n14\n49\n")
+
+    def test_prime_index_primes(self):
+        code = dedent("""\
+                      TP:SP?\\
+                      SPzq$t\\$P:
+                      ?;Pr:N\\@:a1X)""")
+
+        self.run_test(code, "3\n5\n11\n17\n31\n41\n59\n67\n83\n109\n127\n")
 
     def run_test(self, prog, output):
         if isinstance(prog, str):

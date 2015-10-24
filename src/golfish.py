@@ -3,7 +3,7 @@ Gol><>, the slightly golfier version of ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.3.10 (updated 22 Oct 2015)
+Version: 0.3.11 (updated 24 Oct 2015)
 """
 
 import codecs
@@ -587,7 +587,7 @@ class Golfish():
 
         elif instruction == "k":
             elem = self.pop()
-            self.push(self._curr_stack[~elem])
+            self.push(self._curr_stack[~elem % len(self._curr_stack)])
 
         elif instruction == "l":
             self.push(len(self._curr_stack))
