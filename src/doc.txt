@@ -8,6 +8,7 @@ $                     Swap two
 %                     Modulo (always nonnegative)
 S%    euclid-alg      GCD
 &                     Save to register/push from register
+S&                    Bitwise AND
 '                     String parsing - push chars until closing ', backtick escapes '`nr
 (                     Less than
 S(    int-lt          Floor
@@ -77,6 +78,7 @@ Z     zero-cond       Conditional: Pop and execute next if zero/falsy, else skip
 \                     Mirror
 ]
 ^                     Move up
+S^                    Bitwise XOR
 _                     
 `                     Escape next to char, pushing to stack
 a     a-hex           Push 10
@@ -111,5 +113,6 @@ y
 z     zero-eq         Is zero: Push 1 if zero, else 0
 {                     Shift stack left
 |                     
+S|                    Bitwise OR
 }                     Shift stack right
 ~                     Pop and discard

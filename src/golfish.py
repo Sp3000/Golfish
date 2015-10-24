@@ -659,12 +659,18 @@ class Golfish():
             raise NotImplementedError
 
 
-    def handle_switched_instruction(self, instruction):            
+    def handle_switched_instruction(self, instruction):
         if instruction == "%":
             elem2 = self.pop()
             elem1 = self.pop()
 
             self.push(gcd(elem1, elem2))
+
+        elif instruction == "&":
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            self.push(elem1 & elem2)
 
         elif instruction == "(":
             elem = self.pop()
@@ -718,6 +724,12 @@ class Golfish():
             elem = self.pop()
             self.push(math.tan(elem))
 
+        elif instruction == "^":
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            self.push(elem1 ^ elem2)
+
         elif instruction == "l":
             elem = chr(self.pop())
             self.push(ord(elem.lower()))
@@ -733,6 +745,12 @@ class Golfish():
 
         elif instruction == "x":
             self.push(random.random())
+
+        elif instruction == "|":
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            self.push(elem1 | elem2)
 
         else:
             raise NotImplementedError
