@@ -1,5 +1,6 @@
 /src/*.txt
 !/src/doc.txt
+/src/parse_test/*
 
 #################
 ## Eclipse

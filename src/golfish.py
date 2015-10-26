@@ -3,7 +3,7 @@ Gol><>, the slightly golfier version of ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.3.11 (updated 24 Oct 2015)
+Version: 0.3.11 (updated 27 Oct 2015)
 """
 
 import codecs
@@ -121,6 +121,8 @@ class Golfish():
 
         self._bookmark_stack = []
         self._w_marker = None
+
+        self.eof = False
 
     def run(self):        
         try:
@@ -438,11 +440,10 @@ class Golfish():
             raise InvalidStateException # Shouldn't reach here
 
         elif instruction == "E":
-            elem = self.pop()
-
-            if elem != EOF:
+            if self.eof:
+                self.pop()
+            else:
                 self._skip = 1
-                self.push(elem)
 
         elif instruction == "F":
             if self._bookmark_stack and self._bookmark_stack[-1].pos == self.pos_before():
@@ -583,7 +584,12 @@ class Golfish():
             self.halt()
 
         elif instruction == "i":
-            self.push(self.read_char())
+            char = self.read_char()
+
+            if char == EOF:
+                self.eof = True
+
+            self.push(char)
 
         elif instruction == "k":
             elem = self.pop()
@@ -855,6 +861,8 @@ class Golfish():
             self.push(int(num) if num == int(num) else num)
 
         else:
+            self.eof = True
+
             if si:
                 self._dir = DIRECTIONS["v"]
             else:

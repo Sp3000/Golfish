@@ -57,6 +57,9 @@ class TestGolfish(unittest.TestCase):
 
         self.run_test(grid, "0\n1\n2\n3\n4\n")
 
+    def test_I(self):
+        self.run_test(("IINN;", "5 7"), "7\n5\n")
+
     def test_W(self):
         grid = dedent("""\
                       WC
