@@ -122,7 +122,7 @@ class Golfish():
         self._bookmark_stack = []
         self._w_marker = None
 
-        self.eof = False
+        self._eof = False
 
     def run(self):        
         try:
@@ -440,7 +440,7 @@ class Golfish():
             raise InvalidStateException # Shouldn't reach here
 
         elif instruction == "E":
-            if self.eof:
+            if self._eof:
                 self.pop()
             else:
                 self._skip = 1
@@ -824,7 +824,11 @@ class Golfish():
             else:
                 char = sys.stdin.read(1)
 
-            return ord(char) if char else EOF
+            if char:
+                return ord(char)
+            else:
+                self._eof = True
+                return EOF
 
         else:
             if self._input:
@@ -833,6 +837,7 @@ class Golfish():
                 return ord(c)
 
             else:
+                self._eof = True
                 return EOF
 
     def read_num(self, si=False):
@@ -861,7 +866,7 @@ class Golfish():
             self.push(int(num) if num == int(num) else num)
 
         else:
-            self.eof = True
+            self._eof = True
 
             if si:
                 self._dir = DIRECTIONS["v"]

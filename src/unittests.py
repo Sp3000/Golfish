@@ -38,50 +38,57 @@ class TestGolfish(unittest.TestCase):
         self.run_test("4!D5nn;", "[4]\n40")
 
     def test_B(self):
-        grid = dedent("""\
+        code = dedent("""\
                       5FLNL2=?BC
                        ;""")
 
-        self.run_test(grid, "0\n1\n2\n")
+        self.run_test(code, "0\n1\n2\n")
 
     def test_F(self):
-        grid = dedent("""\
+        code = dedent("""\
                       0FLNMC
                        ;""")
 
-        self.run_test(grid, "")
+        self.run_test(code, "")
     
-        grid = dedent("""\
+        code = dedent("""\
                       5FLNMC
                        ;""")
 
-        self.run_test(grid, "0\n1\n2\n3\n4\n")
+        self.run_test(code, "0\n1\n2\n3\n4\n")
 
     def test_I(self):
         self.run_test(("IINN;", "5 7"), "7\n5\n")
 
+        code = dedent("""\
+                      IEv
+                        >nnn;""")
+
+        self.run_test((code, "  5   6     7    "), "765")
+        self.run_test(("In;", "sdfbgf567.4566njn43kn"), str(float("567.4566")))
+
     def test_W(self):
-        grid = dedent("""\
+        code = dedent("""\
                       WC
                       ;""")
 
-        self.run_test(grid, "")
+        self.run_test(code, "")
 
-        grid = dedent("""\
+        code = dedent("""\
                       5W:NMC
                        h""")
 
-        self.run_test(grid, "5\n4\n3\n2\n1\n0")
+        self.run_test(code, "5\n4\n3\n2\n1\n0")
 
     def test_wrap(self):
-        grid = dedent("""\
+        code = dedent("""\
                       <  vn1
                         n\     !2
                         //;
                         3
                       """)
         
-        self.run_test(grid, "103")
+        self.run_test(code, "103")
 
     def test_k(self):
         self.run_test("123450kh", "5")

@@ -71,6 +71,7 @@ ST    tan             Tangent
 U                      
 V     var             Pops element and re-pushes it. Saves element to variable with name determined by next char (don't pick L).
 W     while           While loop. Peeks at top for falsy value. Saves pos/dir. Moves downwards on completion. Modifiable with w instruction.
+SW    while           Exactly like W, but cannot be modified with w
 X     xponentiate     Exponentiation
 Y                     
 Z     zero-cond       Conditional: Pop and execute next if zero/falsy, else skip 1
