@@ -68,7 +68,7 @@ R     repeat          Pop n, repeat next instruction n times (experimental)
 S     switch          Toggle functionality of next instruction
 SS    sin             Sine
 T     teleport-pad    Set teleport pad, saving pos/dir
-ST    tan             Tangent
+ST    trig            Pop k, n. Push application of k-th function from [sin, cos, tan, sinh, cosh, tanh, asin, acos, atan, atan2, asinh, acosh, atanh] to n.
 U                      
 V     var             Pops element and re-pushes it. Saves element to variable with name determined by next char (don't pick L).
 W     while           While loop. Peeks at top for falsy value. Saves pos/dir. Moves downwards on completion. Modifiable with w instruction.
