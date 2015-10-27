@@ -545,7 +545,7 @@ class Golfish():
             else:
                 checker = self.peek
                 
-            if not checker():
+            if not self.pop():
                 self.bookmark_break()
 
         elif instruction == "X":
@@ -733,14 +733,6 @@ class Golfish():
         elif instruction == "T":
             elem = self.pop()
             self.push(math.tan(elem))
-
-        elif instruction == "W":
-            if not self._bookmark_stack or self._bookmark_stack[-1].pos != self.pos_before():                    
-                bookmark = WhileBookmark(self.pos_before(), self._dir[:])
-                self._bookmark_stack.append(bookmark)
-                
-            if self.peek():
-                self.bookmark_break()
 
         elif instruction == "^":
             elem2 = self.pop()
