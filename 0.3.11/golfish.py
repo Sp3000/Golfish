@@ -3,7 +3,7 @@ Gol><>, the slightly golfier version of ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.3.12 (updated 27 Oct 2015)
+Version: 0.3.11 (updated 27 Oct 2015)
 """
 
 import codecs
@@ -731,7 +731,7 @@ class Golfish():
 
         elif instruction == "T":
             func_num = self.pop()
-            functions = [math.sin, math.cos, math.tan, math.sinh, math.cosh, math.atanh,
+            functions = [math.sin, math.cos, math.tan, math.sinh, math.cosh, math.tanh,
                          math.asin, math.acos, math.atan, math.atan2, math.asinh, math.acosh, math.atanh]
 
             elem = self.pop()
