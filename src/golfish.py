@@ -209,7 +209,7 @@ class Golfish():
             self._toggled = True
             return
 
-        if instruction == "D":
+        if instruction == "D" and not self._toggled:
             output = str(self._curr_stack).replace(",", "")
 
             if self._online:
@@ -713,6 +713,13 @@ class Golfish():
         elif instruction == "C":
             elem = self.pop()
             self.push(math.cos(elem))
+
+        elif instruction == "D":
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            self.push(elem1 % elem2)
+            self.push(elem1 // elem2)
 
         elif instruction == "I":
             self.read_num(si=True)

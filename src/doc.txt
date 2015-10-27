@@ -47,6 +47,7 @@ B     break           Break from loop/return from function
 C     continue        Continue loop, for F and W.
 SC    cos             Cosine
 D     debug           Debug, outputting stack to STDERR. Does not count as an instruction for conditionals/trampolines.
+SD    divmod          Pop b,a. Push a%b, a//b
 E     eof-cond        Conditional: if the last input read lead to EOF, pop and execute next, else skip 1.
 F     for             For loop. Pops n, number of loops. L is loop counter. Saves pos/dir. Moves downwards on completion.
 G
@@ -71,7 +72,6 @@ ST    tan             Tangent
 U                      
 V     var             Pops element and re-pushes it. Saves element to variable with name determined by next char (don't pick L).
 W     while           While loop. Peeks at top for falsy value. Saves pos/dir. Moves downwards on completion. Modifiable with w instruction.
-SW    while           Exactly like W, but cannot be modified with w
 X     xponentiate     Exponentiation
 Y                     
 Z     zero-cond       Conditional: Pop and execute next if zero/falsy, else skip 1
