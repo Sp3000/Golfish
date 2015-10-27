@@ -107,7 +107,7 @@ t     teleport        Teleport to last teleport pad
 u                     
 Su    upper           Uppercase
 v                     Move down
-w     while-cond      Modifies the next W instruction to be a while(cond) that pops the condition. C teleports to this position instead.
+w     while-cond      Push a marker to the marker stack which modifies the next W instruction to be a while(cond) that pops the condition. C teleports to this position instead.
 x                     Random direction
 Sx    like x          Push random float in [0, 1)
 y        
