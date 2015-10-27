@@ -3,7 +3,7 @@ Gol><>, the slightly golfier version of ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.3.12 (updated 27 Oct 2015)
+Version: 0.3.11 (updated 27 Oct 2015)
 """
 
 import codecs

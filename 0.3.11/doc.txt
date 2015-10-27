@@ -1,0 +1,119 @@
+Char  Mnemonic        Details
+
+                      NOP
+!                     Trampoline: add 1 to instructions skip count
+"                     String parsing - push chars until closing ", backtick escapes "`nr
+#                     4-way mirror
+$                     Swap two
+%                     Modulo (always nonnegative)
+S%    euclid-alg      GCD
+&                     Save to register/push from register
+S&                    Bitwise AND
+'                     String parsing - push chars until closing ', backtick escapes '`nr
+(                     Less than
+S(    int-lt          Floor
+)                     Greater than
+S)    int-gt          Ceil
+*                     Multiply
++                     Add
+,                     Floating point division
+S,    like ,          Integer division
+-                     Subtract
+.                     Pop y, x and jump to (x, y)
+/                     Mirror
+0                     Push 0
+1                     Push 1
+2                     Push 2
+S2    2.718           Push e
+3                     Push 3
+S3    3.14            Push pi
+4                     Push 4
+5                     Push 5
+6                     Push 6
+7                     Push 7
+8                     Push 8
+9                     Push 9
+:                     Duplicate
+;                     Halt with no output
+<                     Move left
+=                     Equals
+S=                    Round
+>                     Move right
+?                     Conditional: pop and execute next if truthy, else skip 1
+@                     Rotate 3, moving 3rd down to top
+A     alias           Pops y,x and saves [x,y] as the start of a function, along with current direction. Function name is determined by next char. Use B to break/return from function.
+SA    abs             Absolute value
+B     break           Break from loop/return from function
+C     continue        Continue loop, for F and W.
+SC    cos             Cosine
+D     debug           Debug, outputting stack to STDERR. Does not count as an instruction for conditionals/trampolines.
+SD    divmod          Pop b,a. Push a%b, a//b
+E     eof-cond        Conditional: if the last input read lead to EOF, pop and execute next, else skip 1.
+F     for             For loop. Pops n, number of loops. L is loop counter. Saves pos/dir. Moves downwards on completion.
+G
+H     halt-char       Output stack as char until empty then halt
+I     input-pos       Numeric input: Read next int/float. Push -1 on EOF.
+SI    input-num       Numeric input: Read next int/float. Change direction to down on EOF.
+J     jump-cond       Conditional jump: pop cond, y, x and jump to (x, y) if cond
+K     kopy-n          Multiple copy: Pop n and copy the top n elements
+L     loop-counter    Loop counter for F. Starts at zero.
+SL    log             Pop b,a and push log(a,b)
+M     minus-1         Minus 1
+N     num-out-nl      Output as num + trailing newline
+O                     
+P     plus-1          Plus 1
+SP    prime           Primality test
+Q     qmark-any       Conditional: Pop n, then pop and execute next if truthy, else skip n instructions
+R     repeat          Pop n, repeat next instruction n times (experimental)
+S     switch          Toggle functionality of next instruction
+SS    sin             Sine
+T     teleport-pad    Set teleport pad, saving pos/dir
+ST    tan             Tangent
+U                      
+V     var             Pops element and re-pushes it. Saves element to variable with name determined by next char (don't pick L).
+W     while           While loop. Peeks at top for falsy value. Saves pos/dir. Moves downwards on completion. Modifiable with w instruction.
+X     xponentiate     Exponentiation
+Y                     
+Z     zero-cond       Conditional: Pop and execute next if zero/falsy, else skip 1
+[
+\                     Mirror
+]
+^                     Move up
+S^                    Bitwise XOR
+_                     
+`                     Escape next to char, pushing to stack
+a     a-hex           Push 10
+b     b-hex           Push 11
+c     c-hex           Push 12
+d     d-hex           Push 13
+e     e-hex           Push 14
+f     f-hex           Push 15
+g     get             Pop y, x and push char at (x, y)
+h     halt-num        Halt and output top of stack as num
+i     input-char      Read char, pushes -1 on EOF
+j                     
+k     kopy-nth        Get nth element down (top is 0). Indices wrap.
+l     length          Push length of stack
+Sl    lower           Lowercase
+m     minus-1         Push -1
+n     num-out         Output as num
+Sn    num-rounding    Pop d, n and output n rounded to d decimal places
+o     out-char        Output as char
+p     put             Pop y, x, char and put char at (x, y)
+q     qmark-2         Conditional: pop and execute next if truthy, else skip 2 instructions
+r     reverse         Reverse stack
+s     sixteen         Pop n, push n+16
+t     teleport        Teleport to last teleport pad
+u                     
+Su    upper           Uppercase
+v                     Move down
+w     while-cond      Push a marker to the marker stack which modifies the next W instruction to be a while(cond) that pops the condition. C teleports to this position instead.
+x                     Random direction
+Sx    like x          Push random float in [0, 1)
+y        
+z     zero-eq         Is zero: Push 1 if zero, else 0
+{                     Shift stack left
+|                     
+S|                    Bitwise OR
+}                     Shift stack right
+~                     Pop and discard
