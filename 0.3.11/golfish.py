@@ -731,7 +731,7 @@ class Golfish():
 
         elif instruction == "T":
             func_num = self.pop()
-            functions = [math.sin, math.cos, math.tan, math.sinh, math.cosh, math.atanh,
+            functions = [math.sin, math.cos, math.tan, math.sinh, math.cosh, math.tanh,
                          math.asin, math.acos, math.atan, math.atan2, math.asinh, math.acosh, math.atanh]
 
             elem = self.pop()
