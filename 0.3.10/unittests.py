@@ -38,66 +38,47 @@ class TestGolfish(unittest.TestCase):
         self.run_test("4!D5nn;", "[4]\n40")
 
     def test_B(self):
-        code = dedent("""\
+        grid = dedent("""\
                       5FLNL2=?BC
                        ;""")
 
-        self.run_test(code, "0\n1\n2\n")
+        self.run_test(grid, "0\n1\n2\n")
 
     def test_F(self):
-        code = dedent("""\
+        grid = dedent("""\
                       0FLNMC
                        ;""")
 
-        self.run_test(code, "")
+        self.run_test(grid, "")
     
-        code = dedent("""\
+        grid = dedent("""\
                       5FLNMC
                        ;""")
 
-        self.run_test(code, "0\n1\n2\n3\n4\n")
-
-    def test_I(self):
-        self.run_test(("IINN;", "5 7"), "7\n5\n")
-
-        code = dedent("""\
-                      IEv
-                        >nnn;""")
-
-        self.run_test((code, "  5   6     7    "), "765")
-        self.run_test(("In;", "sdfbgf567.4566njn43kn"), str(float("567.4566")))
+        self.run_test(grid, "0\n1\n2\n3\n4\n")
 
     def test_W(self):
-        code = dedent("""\
+        grid = dedent("""\
                       WC
                       ;""")
 
-        self.run_test(code, "")
+        self.run_test(grid, "")
 
-        code = dedent("""\
+        grid = dedent("""\
                       5W:NMC
                        h""")
 
-        self.run_test(code, "5\n4\n3\n2\n1\n0")
+        self.run_test(grid, "5\n4\n3\n2\n1\n0")
 
     def test_wrap(self):
-        code = dedent("""\
+        grid = dedent("""\
                       <  vn1
                         n\     !2
                         //;
                         3
                       """)
         
-        self.run_test(code, "103")
-
-    def test_k(self):
-        self.run_test("123450kh", "5")
-        self.run_test("123451kh", "4")
-        self.run_test("123452kh", "3")
-        self.run_test("12345mkh", "1")
-        self.run_test("12345akh", "5")
-        self.run_test("1234503-kh", "3")
-        self.run_test("123450a-kh", "5")
+        self.run_test(grid, "103")
 
     def test_Rspace(self):
         self.run_test("123R D;", "[1 2]\n")
@@ -271,14 +252,6 @@ class TestGolfish(unittest.TestCase):
                       NRl<C}<;""")
 
         self.run_test((code, "3 | -3, 4, 7, -1, 15"), "-3\n-5\n1\n14\n49\n")
-
-    def test_prime_index_primes(self):
-        code = dedent("""\
-                      TP:SP?\\
-                      SPzq$t\\$P:
-                      ?;Pr:N\\@:a1X)""")
-
-        self.run_test(code, "3\n5\n11\n17\n31\n41\n59\n67\n83\n109\n127\n")
 
     def run_test(self, prog, output):
         if isinstance(prog, str):

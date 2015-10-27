@@ -8,7 +8,6 @@ $                     Swap two
 %                     Modulo (always nonnegative)
 S%    euclid-alg      GCD
 &                     Save to register/push from register
-S&                    Bitwise AND
 '                     String parsing - push chars until closing ', backtick escapes '`nr
 (                     Less than
 S(    int-lt          Floor
@@ -47,12 +46,11 @@ B     break           Break from loop/return from function
 C     continue        Continue loop, for F and W.
 SC    cos             Cosine
 D     debug           Debug, outputting stack to STDERR. Does not count as an instruction for conditionals/trampolines.
-SD    divmod          Pop b,a. Push a%b, a//b
-E     eof-cond        Conditional: if the last input read lead to EOF, pop and execute next, else skip 1.
+E     eof-cond        Conditional: Pop and execute next if EOF (-1), else skip 1 and re-push. Essentially :m=? except it gets rid of the -1 as well.
 F     for             For loop. Pops n, number of loops. L is loop counter. Saves pos/dir. Moves downwards on completion.
 G
 H     halt-char       Output stack as char until empty then halt
-I     input-pos       Numeric input: Read next int/float. Push -1 on EOF.
+I     input-pos       Numeric input: Read next int/float. Push -1 on EOF (if -1 could be in the input, use SI instead)
 SI    input-num       Numeric input: Read next int/float. Change direction to down on EOF.
 J     jump-cond       Conditional jump: pop cond, y, x and jump to (x, y) if cond
 K     kopy-n          Multiple copy: Pop n and copy the top n elements
@@ -79,7 +77,6 @@ Z     zero-cond       Conditional: Pop and execute next if zero/falsy, else skip
 \                     Mirror
 ]
 ^                     Move up
-S^                    Bitwise XOR
 _                     
 `                     Escape next to char, pushing to stack
 a     a-hex           Push 10
@@ -90,7 +87,7 @@ e     e-hex           Push 14
 f     f-hex           Push 15
 g     get             Pop y, x and push char at (x, y)
 h     halt-num        Halt and output top of stack as num
-i     input-char      Read char, pushes -1 on EOF
+i     input-char      Read char
 j                     
 k     kopy-nth        Get nth element down (top is 0). Indices wrap.
 l     length          Push length of stack
@@ -107,13 +104,12 @@ t     teleport        Teleport to last teleport pad
 u                     
 Su    upper           Uppercase
 v                     Move down
-w     while-cond      Push a marker to the marker stack which modifies the next W instruction to be a while(cond) that pops the condition. C teleports to this position instead.
+w     while-cond      Modifies the next W instruction to be a while(cond) that pops the condition. C teleports to this position instead.
 x                     Random direction
 Sx    like x          Push random float in [0, 1)
 y        
 z     zero-eq         Is zero: Push 1 if zero, else 0
 {                     Shift stack left
 |                     
-S|                    Bitwise OR
 }                     Shift stack right
 ~                     Pop and discard

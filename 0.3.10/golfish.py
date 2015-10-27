@@ -3,7 +3,7 @@ Gol><>, the slightly golfier version of ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.3.12 (updated 27 Oct 2015)
+Version: 0.3.10 (updated 22 Oct 2015)
 """
 
 import codecs
@@ -58,7 +58,7 @@ class Bookmark():
 
 
 class WhileBookmark(Bookmark):
-     def __init__(self, pos, dir_, w_marker=None):
+     def __init__(self, pos, dir_, w_marker):
          super().__init__(pos, dir_)
          self.w_marker = w_marker
 
@@ -120,9 +120,7 @@ class Golfish():
         self._R_repeat = 1
 
         self._bookmark_stack = []
-        self._marker_stack = []
-
-        self._eof = False
+        self._w_marker = None
 
     def run(self):        
         try:
@@ -209,7 +207,7 @@ class Golfish():
             self._toggled = True
             return
 
-        if instruction == "D" and not self._toggled:
+        if instruction == "D":
             output = str(self._curr_stack).replace(",", "")
 
             if self._online:
@@ -440,10 +438,11 @@ class Golfish():
             raise InvalidStateException # Shouldn't reach here
 
         elif instruction == "E":
-            if self._eof:
-                self.pop()
-            else:
+            elem = self.pop()
+
+            if elem != EOF:
                 self._skip = 1
+                self.push(elem)
 
         elif instruction == "F":
             if self._bookmark_stack and self._bookmark_stack[-1].pos == self.pos_before():
@@ -532,13 +531,9 @@ class Golfish():
 
         elif instruction == "W":
             if not self._bookmark_stack or self._bookmark_stack[-1].pos != self.pos_before():
-                if self._marker_stack:
-                    w_marker = self._marker_stack.pop()
-                else:
-                    w_marker = None
-                    
-                bookmark = WhileBookmark(self.pos_before(), self._dir[:], w_marker)
+                bookmark = WhileBookmark(self.pos_before(), self._dir[:], self._w_marker)
                 self._bookmark_stack.append(bookmark)
+                self._w_marker = None
 
             if self._bookmark_stack[-1].w_marker:
                 checker = self.pop
@@ -588,16 +583,11 @@ class Golfish():
             self.halt()
 
         elif instruction == "i":
-            char = self.read_char()
-
-            if char == EOF:
-                self.eof = True
-
-            self.push(char)
+            self.push(self.read_char())
 
         elif instruction == "k":
             elem = self.pop()
-            self.push(self._curr_stack[~elem % len(self._curr_stack)])
+            self.push(self._curr_stack[~elem])
 
         elif instruction == "l":
             self.push(len(self._curr_stack))
@@ -643,7 +633,7 @@ class Golfish():
             self._curr_stack = self._stack_tape[self._stack_num]
 
         elif instruction == "w":
-            self._marker_stack.append([self._pos[:], self._dir[:]])
+            self._w_marker = [self._pos[:], self._dir[:]]
                 
         elif instruction == "x":
             self._dir = random.choice(list(DIRECTIONS.values()))
@@ -669,18 +659,12 @@ class Golfish():
             raise NotImplementedError
 
 
-    def handle_switched_instruction(self, instruction):
+    def handle_switched_instruction(self, instruction):            
         if instruction == "%":
             elem2 = self.pop()
             elem1 = self.pop()
 
             self.push(gcd(elem1, elem2))
-
-        elif instruction == "&":
-            elem2 = self.pop()
-            elem1 = self.pop()
-
-            self.push(elem1 & elem2)
 
         elif instruction == "(":
             elem = self.pop()
@@ -714,13 +698,6 @@ class Golfish():
             elem = self.pop()
             self.push(math.cos(elem))
 
-        elif instruction == "D":
-            elem2 = self.pop()
-            elem1 = self.pop()
-
-            self.push(elem1 % elem2)
-            self.push(elem1 // elem2)
-
         elif instruction == "I":
             self.read_num(si=True)
 
@@ -741,12 +718,6 @@ class Golfish():
             elem = self.pop()
             self.push(math.tan(elem))
 
-        elif instruction == "^":
-            elem2 = self.pop()
-            elem1 = self.pop()
-
-            self.push(elem1 ^ elem2)
-
         elif instruction == "l":
             elem = chr(self.pop())
             self.push(ord(elem.lower()))
@@ -762,12 +733,6 @@ class Golfish():
 
         elif instruction == "x":
             self.push(random.random())
-
-        elif instruction == "|":
-            elem2 = self.pop()
-            elem1 = self.pop()
-
-            self.push(elem1 | elem2)
 
         else:
             raise NotImplementedError
@@ -835,11 +800,7 @@ class Golfish():
             else:
                 char = sys.stdin.read(1)
 
-            if char:
-                return ord(char)
-            else:
-                self._eof = True
-                return EOF
+            return ord(char) if char else EOF
 
         else:
             if self._input:
@@ -848,7 +809,6 @@ class Golfish():
                 return ord(c)
 
             else:
-                self._eof = True
                 return EOF
 
     def read_num(self, si=False):
@@ -877,8 +837,6 @@ class Golfish():
             self.push(int(num) if num == int(num) else num)
 
         else:
-            self._eof = True
-
             if si:
                 self._dir = DIRECTIONS["v"]
             else:
