@@ -710,10 +710,6 @@ class Golfish():
             elem = self.pop()
             self.push(abs(elem))
 
-        elif instruction == "C":
-            elem = self.pop()
-            self.push(math.cos(elem))
-
         elif instruction == "D":
             elem2 = self.pop()
             elem1 = self.pop()
@@ -733,13 +729,13 @@ class Golfish():
             elem = self.pop()
             self.push(1 if is_probably_prime(elem) else 0)
 
-        elif instruction == "S":
-            elem = self.pop()
-            self.push(math.sin(elem))
-
         elif instruction == "T":
+            func_num = self.pop()
+            functions = [math.sin, math.cos, math.tan, math.sinh, math.cosh, math.atanh,
+                         math.asin, math.acos, math.atan, math.atan2, math.asinh, math.acosh, math.atanh]
+
             elem = self.pop()
-            self.push(math.tan(elem))
+            self.push(functions[func_num](elem))
 
         elif instruction == "^":
             elem2 = self.pop()
