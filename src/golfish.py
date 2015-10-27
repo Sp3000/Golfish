@@ -58,7 +58,7 @@ class Bookmark():
 
 
 class WhileBookmark(Bookmark):
-     def __init__(self, pos, dir_, w_marker):
+     def __init__(self, pos, dir_, w_marker=None):
          super().__init__(pos, dir_)
          self.w_marker = w_marker
 
@@ -120,7 +120,7 @@ class Golfish():
         self._R_repeat = 1
 
         self._bookmark_stack = []
-        self._w_marker = None
+        self._marker_stack = []
 
         self._eof = False
 
@@ -532,9 +532,13 @@ class Golfish():
 
         elif instruction == "W":
             if not self._bookmark_stack or self._bookmark_stack[-1].pos != self.pos_before():
-                bookmark = WhileBookmark(self.pos_before(), self._dir[:], self._w_marker)
+                if self._marker_stack:
+                    w_marker = self._marker_stack.pop()
+                else:
+                    w_marker = None
+                    
+                bookmark = WhileBookmark(self.pos_before(), self._dir[:], w_marker)
                 self._bookmark_stack.append(bookmark)
-                self._w_marker = None
 
             if self._bookmark_stack[-1].w_marker:
                 checker = self.pop
@@ -639,7 +643,7 @@ class Golfish():
             self._curr_stack = self._stack_tape[self._stack_num]
 
         elif instruction == "w":
-            self._w_marker = [self._pos[:], self._dir[:]]
+            self._marker_stack.append([self._pos[:], self._dir[:]])
                 
         elif instruction == "x":
             self._dir = random.choice(list(DIRECTIONS.values()))
@@ -729,6 +733,14 @@ class Golfish():
         elif instruction == "T":
             elem = self.pop()
             self.push(math.tan(elem))
+
+        elif instruction == "W":
+            if not self._bookmark_stack or self._bookmark_stack[-1].pos != self.pos_before():                    
+                bookmark = WhileBookmark(self.pos_before(), self._dir[:])
+                self._bookmark_stack.append(bookmark)
+                
+            if self.peek():
+                self.bookmark_break()
 
         elif instruction == "^":
             elem2 = self.pop()
