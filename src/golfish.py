@@ -3,7 +3,7 @@ Gol><>, the slightly golfier version of ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.3.12 (updated 27 Oct 2015)
+Version: 0.3.12 (updated 2 Nov 2015)
 """
 
 import codecs
@@ -670,7 +670,34 @@ class Golfish():
 
 
     def handle_switched_instruction(self, instruction):
-        if instruction == "%":
+        if instruction == '"':
+            escaped = False
+            parse_char = ord(instruction)
+            self.move()
+            char = self._board[self._pos[1]][self._pos[0]]
+            
+            while escaped or char != parse_char:
+                if escaped:
+                    escapes = {ord(a): ord(b) for a,b in zip("`nr","`\n\r")}
+                    escapes.update({parse_char: parse_char})
+                    
+                    if char in escapes:
+                        self.output(chr(escapes[char]))
+                    else:
+                        self.output('`' + chr(char))
+
+                    escaped = False
+
+                else:
+                    if char == ord('`'):
+                        escaped = True
+                    else:
+                        self.output(chr(char))
+
+                self.move()
+                char = self._board[self._pos[1]][self._pos[0]]
+        
+        elif instruction == "%":
             elem2 = self.pop()
             elem1 = self.pop()
 

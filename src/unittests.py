@@ -217,6 +217,12 @@ class TestGolfish(unittest.TestCase):
 
         for n in range(30):
             self.run_test((code, str(n)), str(int(is_probably_prime(n))))
+
+    def test_primes3(self):
+        code = "I:1)*2T2K=q1h2K%zq0hPt"
+
+        for n in range(30):
+            self.run_test((code, str(n)), str(int(is_probably_prime(n))))
         
     def test_sorter(self):
         self.run_test((dedent("""\

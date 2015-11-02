@@ -3,6 +3,7 @@ Char  Mnemonic        Details
                       NOP
 !                     Trampoline: add 1 to instructions skip count
 "                     String parsing - push chars until closing ", backtick escapes "`nr
+S"                    Print parsing - like " but prints instead of pushes
 #                     4-way mirror
 $                     Swap two
 %                     Modulo (always nonnegative)
