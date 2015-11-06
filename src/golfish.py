@@ -682,6 +682,9 @@ class Golfish():
         elif instruction == "{":
             self.rotate_left()
 
+        elif instruction == "|":
+            self.handle_normal_instruction('C')
+
         elif instruction == "}":
             self.rotate_right()
 
@@ -868,7 +871,7 @@ class Golfish():
             string_parse = False
             escape = False
 
-            while string_parse or escape or self.char() != 'C':
+            while string_parse or escape or self.char() != '|':
                 if self.char() == '`':
                     escape = not escape
 
