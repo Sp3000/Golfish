@@ -59,20 +59,24 @@ class Bookmark():
         self.closure_stack = closure_stack
 
 
-class WhileBookmark(Bookmark):
+class LoopBookmark(Bookmark):
+    def __init__(self, pos, dir_, closure_stack):
+        super().__init__(pos, dir_, closure_stack)
+        self.counter = 0
+
+    def increment_counter(self):
+        self.counter += 1
+
+class WhileBookmark(LoopBookmark):
      def __init__(self, pos, dir_, closure_stack, w_marker=None):
          super().__init__(pos, dir_, closure_stack)
          self.w_marker = w_marker
 
 
-class ForBookmark(Bookmark):
+class ForBookmark(LoopBookmark):
     def __init__(self, pos, dir_, closure_stack, limit):
         super().__init__(pos, dir_, closure_stack)
         self.limit = limit
-        self.counter = 0
-
-    def increment_counter(self):
-        self.counter += 1
 
 
 class FunctionBookmark(Bookmark):
@@ -125,6 +129,8 @@ class Golfish():
         self._marker_stack = []
 
         self._eof = False
+
+        self._last_loop_counter = 0
 
         self._closure_stack = []
 
@@ -455,6 +461,7 @@ class Golfish():
         elif instruction == "F":
             if self._bookmark_stack and self._bookmark_stack[-1].pos == self.pos_before():
                 self._bookmark_stack[-1].increment_counter()
+                self._last_loop_counter = self._bookmark_stack[-1].counter
                 
             else:
                 limit = self.pop()
@@ -499,11 +506,10 @@ class Golfish():
             self._curr_stack.extend(popped)
 
         elif instruction == "L":
-            if not self._bookmark_stack or not isinstance(self._bookmark_stack[-1], ForBookmark):
-                raise InvalidStateException("Attempted counter push outside of for loop")
-
+            if self._bookmark_stack and isinstance(self._bookmark_stack[-1], LoopBookmark):
+                self.push(self._bookmark_stack[-1].counter)
             else:
-                self.push(self._bookmark_stack[-1].counter) 
+                self.push(self._last_loop_counter)
 
         elif instruction == "M":
             elem = self.pop()
@@ -544,7 +550,11 @@ class Golfish():
             self._variable_map[char] = elem
 
         elif instruction == "W":
-            if not self._bookmark_stack or self._bookmark_stack[-1].pos != self.pos_before():
+            if self._bookmark_stack and self._bookmark_stack[-1].pos == self.pos_before():
+                self._bookmark_stack[-1].increment_counter()
+                self._last_loop_counter = self._bookmark_stack[-1].counter
+                
+            else:
                 if self._marker_stack:
                     w_marker = self._marker_stack.pop()
                 else:

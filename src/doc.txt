@@ -56,7 +56,7 @@ I     input-pos       Numeric input: Read next int/float. Push -1 on EOF.
 SI    input-num       Numeric input: Read next int/float. Change direction to down on EOF.
 J     jump-cond       Conditional jump: pop cond, y, x and jump to (x, y) if cond
 K     kopy-n          Multiple copy: Pop n and copy the top n elements
-L     loop-counter    Loop counter for F. Starts at zero.
+L     loop-counter    Loop counter, starts at zero. Refers to last loop if pushed outside of loop.
 SL    log             Pop b,a and push log(a,b)
 M     minus-1         Minus 1
 N     num-out-nl      Output as num + trailing newline
