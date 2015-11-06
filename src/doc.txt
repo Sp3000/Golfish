@@ -46,11 +46,10 @@ A     alias           Pops y,x and saves [x,y] as the start of a function, along
 SA    abs             Absolute value
 B     break           Break from loop/return from function
 C     continue        Continue loop, for F and W.
-SC    cos             Cosine
 D     debug           Debug, outputting stack to STDERR. Does not count as an instruction for conditionals/trampolines.
-SD    divmod          Pop b,a. Push a%b, a//b
+SD    divmod          Pop b,a. Push a//b, a%b
 E     eof-cond        Conditional: if the last input read lead to EOF, pop and execute next, else skip 1.
-F     for             For loop. Pops n, number of loops. L is loop counter. Saves pos/dir. Moves downwards on completion.
+F     for             For loop. Pops n, number of loops. L is loop counter. Saves pos/dir. Moves to after C on same row on completion.
 G
 H     halt-char       Output stack as char until empty then halt
 I     input-pos       Numeric input: Read next int/float. Push -1 on EOF.
@@ -67,12 +66,11 @@ SP    prime           Primality test
 Q     qmark-any       Conditional: Pop n, then pop and execute next if truthy, else skip n instructions
 R     repeat          Pop n, repeat next instruction n times (experimental)
 S     switch          Toggle functionality of next instruction
-SS    sin             Sine
 T     teleport-pad    Set teleport pad, saving pos/dir
-ST    trig            Pop k, n. Push application of k-th function from [sin, cos, tan, sinh, cosh, tanh, asin, acos, atan, atan2, asinh, acosh, atanh] to n.
+ST    trig            Trig library: pop k, n and push application of k-th function from [sin, cos, tan, sinh, cosh, tanh, asin, acos, atan, atan2, asinh, acosh, atanh] to n.
 U                      
 V     var             Pops element and re-pushes it. Saves element to variable with name determined by next char (don't pick L).
-W     while           While loop. Peeks at top for falsy value. Saves pos/dir. Moves downwards on completion. Modifiable with w instruction.
+W     while           While loop. Peeks at top for falsy value. Saves pos/dir. Moves to after C on same row on completion. Modifiable with w instruction.
 X     xponentiate     Exponentiation
 Y                     
 Z     zero-cond       Conditional: Pop and execute next if zero/falsy, else skip 1
@@ -105,6 +103,7 @@ q     qmark-2         Conditional: pop and execute next if truthy, else skip 2 i
 r     reverse         Reverse stack
 s     sixteen         Pop n, push n+16
 t     teleport        Teleport to last teleport pad
+
 u                     
 Su    upper           Uppercase
 v                     Move down

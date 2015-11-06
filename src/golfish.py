@@ -3,9 +3,10 @@ Gol><>, the slightly golfier version of ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.3.12 (updated 2 Nov 2015)
+Version: 0.3.12 (updated 6 Nov 2015)
 """
 
+import argparse
 import codecs
 from collections import defaultdict, namedtuple
 import sys
@@ -597,7 +598,11 @@ class Golfish():
 
         elif instruction == "k":
             elem = self.pop()
-            self.push(self._curr_stack[~elem % len(self._curr_stack)])
+
+            if self._curr_stack:
+                self.push(self._curr_stack[~elem % len(self._curr_stack)])
+            else:
+                self.push(0)
 
         elif instruction == "l":
             self.push(len(self._curr_stack))
@@ -680,7 +685,7 @@ class Golfish():
                 if escaped:
                     escapes = {ord(a): ord(b) for a,b in zip("`nr","`\n\r")}
                     escapes.update({parse_char: parse_char})
-                    
+
                     if char in escapes:
                         self.output(chr(escapes[char]))
                     else:
@@ -741,8 +746,8 @@ class Golfish():
             elem2 = self.pop()
             elem1 = self.pop()
 
-            self.push(elem1 % elem2)
             self.push(elem1 // elem2)
+            self.push(elem1 % elem2)
 
         elif instruction == "I":
             self.read_num(si=True)
@@ -823,6 +828,10 @@ class Golfish():
             return 0
 
 
+    def char(self):
+        return chr(self._board[self._pos[1]][self._pos[0]])
+
+
     def rotate_left(self):
         self.push(self.pop(index=0))
 
@@ -837,8 +846,21 @@ class Golfish():
         self._dir = bookmark.dir[:]
         
         if not isinstance(bookmark, FunctionBookmark):
-            self.move()
-            self._dir = DIRECTIONS["v"]
+            # To do: improve
+            string_parse = False
+            escape = False
+
+            while string_parse or escape or self.char() != 'C':
+                if self.char() == '`':
+                    escape = not escape
+
+                elif escape:
+                    escape = False
+
+                elif self.char() in "'\"":
+                    string_parse = not string_parse
+
+                self.move()
 
 
     def read_char(self):
@@ -938,12 +960,14 @@ class Golfish():
         raise HaltProgram
 
 if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        print("Usage: <python 3 command> golfish.py [-d] <program file>", file=sys.stderr)
-        exit()
-        
-    filename = sys.argv[-1]
-    debug = (len(sys.argv) > 2 and "-d" in sys.argv[:-1])
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--debug', help="Debug mode (show interpreter errors)", action="store_true")
+    parser.add_argument("program_path", help="Path to file containing program",
+                        type=str)
+
+    args = parser.parse_args()
+    filename = args.program_path
+    debug = args.debug    
 
     try:
         with open(filename) as infile:
