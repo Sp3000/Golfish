@@ -185,6 +185,15 @@ class TestGolfish(unittest.TestCase):
         self.run_test(("IT:NM:Z;P3*:2%qPt6,t", "5"), "5\n16\n8\n4\n2\n1\n")
         self.run_test(("IT:NM:Z;P3*:2%qPt6,t", "7"), "7\n22\n11\n34\n17\n52\n26\n13\n40\n20\n10\n5\n16\n8\n4\n2\n1\n")
 
+    def test_recursive_collatz(self):
+        code = dedent("""\
+                      Im1ACC;
+                      :N :1=?B :2%?v 2S, CB
+                                   > 3*P CB""")
+
+        self.run_test((code, "5"), "5\n16\n8\n4\n2\n1\n")
+        self.run_test((code, "7"), "7\n22\n11\n34\n17\n52\n26\n13\n40\n20\n10\n5\n16\n8\n4\n2\n1\n")
+             
     def test_primes(self):
         self.run_test("P:` )?;:SPq:N", "2\n3\n5\n7\n11\n13\n17\n19\n23\n29\n31\n")
 

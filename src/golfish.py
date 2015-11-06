@@ -53,20 +53,21 @@ class InvalidStateException(Exception):
 
 
 class Bookmark():
-    def __init__(self, pos, dir_):
+    def __init__(self, pos, dir_, closure_stack):
         self.pos = pos
         self.dir = dir_
+        self.closure_stack = closure_stack
 
 
 class WhileBookmark(Bookmark):
-     def __init__(self, pos, dir_, w_marker=None):
-         super().__init__(pos, dir_)
+     def __init__(self, pos, dir_, closure_stack, w_marker=None):
+         super().__init__(pos, dir_, closure_stack)
          self.w_marker = w_marker
 
 
 class ForBookmark(Bookmark):
-    def __init__(self, pos, dir_, limit):
-        super().__init__(pos, dir_)
+    def __init__(self, pos, dir_, closure_stack, limit):
+        super().__init__(pos, dir_, closure_stack)
         self.limit = limit
         self.counter = 0
 
@@ -75,8 +76,8 @@ class ForBookmark(Bookmark):
 
 
 class FunctionBookmark(Bookmark):
-    def __init__(self, pos, dir_):
-        super().__init__(pos, dir_)
+    def __init__(self, pos, dir_, closure_stack):
+        super().__init__(pos, dir_, closure_stack)
 
 
 class Golfish():
@@ -259,11 +260,13 @@ class Golfish():
             return
 
         if instruction in self._function_alias_map:
-            bookmark = FunctionBookmark(self._pos[:], self._dir[:])
+            p, d, c = self._function_alias_map[instruction]
+            
+            bookmark = FunctionBookmark(self._pos[:], self._dir[:], c)
             self._bookmark_stack.append(bookmark)
-            self._pos = self._function_alias_map[instruction][0][:]
-            self._dir = self._function_alias_map[instruction][1][:]
-            self._curr_stack.extend(self._closure_stack[::-1])
+            self._pos = p[:]
+            self._dir = d[:]
+            self._curr_stack.extend(c[::-1])
             return
 
         if instruction in DIRECTIONS:
@@ -418,7 +421,8 @@ class Golfish():
 
             y = self.pop()
             x = self.pop()
-            self._function_alias_map[char] = [[x, y], self._dir[:]]
+            self._function_alias_map[char] = [[x, y], self._dir[:], self._closure_stack]
+            self._closure_stack = []
 
         elif instruction == "B":
             if self._bookmark_stack:
@@ -456,8 +460,11 @@ class Golfish():
             else:
                 limit = self.pop()
                 
-                bookmark = ForBookmark(self.pos_before(), self._dir[:], limit)
+                bookmark = ForBookmark(self.pos_before(), self._dir[:],
+                                       self._closure_stack, limit)
+
                 self._bookmark_stack.append(bookmark)
+                self._closure_stack = []
 
             if (self._bookmark_stack and
                 self._bookmark_stack[-1].counter >= self._bookmark_stack[-1].limit):
@@ -465,7 +472,7 @@ class Golfish():
                 self.bookmark_break()
 
             else:
-                self._curr_stack.extend(self._closure_stack[::-1])
+                self._curr_stack.extend(self._bookmark_stack[-1].closure_stack)
 
         elif instruction == "H":
             while self._curr_stack:
@@ -544,8 +551,11 @@ class Golfish():
                 else:
                     w_marker = None
                     
-                bookmark = WhileBookmark(self.pos_before(), self._dir[:], w_marker)
+                bookmark = WhileBookmark(self.pos_before(), self._dir[:],
+                                         self._closure_stack, w_marker)
+                
                 self._bookmark_stack.append(bookmark)
+                self._closure_stack = []
 
             if self._bookmark_stack[-1].w_marker:
                 checker = self.pop
@@ -554,9 +564,8 @@ class Golfish():
                 
             if not checker():
                 self.bookmark_break()
-
             else:
-                self._curr_stack.extend(self._closure_stack[::-1])
+                self._curr_stack.extend(self._bookmark_stack[-1].closure_stack)
 
         elif instruction == "X":
             elem2 = self.pop()
@@ -577,14 +586,6 @@ class Golfish():
         elif instruction == "]":
             elem = self.pop()
             self._closure_stack.append(elem)
-
-        elif instruction == "[":
-            if self._closure_stack:
-                elem = self._closure_stack.pop()
-            else:
-                elem = 0
-
-            self.push(elem)
 
         elif instruction == "`":
             self.move()
