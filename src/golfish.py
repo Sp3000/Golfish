@@ -125,6 +125,8 @@ class Golfish():
 
         self._eof = False
 
+        self._closure_stack = []
+
     def run(self):        
         try:
             while True:
@@ -261,6 +263,7 @@ class Golfish():
             self._bookmark_stack.append(bookmark)
             self._pos = self._function_alias_map[instruction][0][:]
             self._dir = self._function_alias_map[instruction][1][:]
+            self._curr_stack.extend(self._closure_stack[::-1])
             return
 
         if instruction in DIRECTIONS:
@@ -461,6 +464,9 @@ class Golfish():
 
                 self.bookmark_break()
 
+            else:
+                self._curr_stack.extend(self._closure_stack[::-1])
+
         elif instruction == "H":
             while self._curr_stack:
                 elem = self.pop()
@@ -549,6 +555,9 @@ class Golfish():
             if not checker():
                 self.bookmark_break()
 
+            else:
+                self._curr_stack.extend(self._closure_stack[::-1])
+
         elif instruction == "X":
             elem2 = self.pop()
             elem1 = self.pop()
@@ -565,10 +574,17 @@ class Golfish():
             if condition:
                 self._skip = 1
 
-        elif instruction in "[]":
+        elif instruction == "]":
             elem = self.pop()
-            offset = 1 if instruction == "]" else -1
-            self._stack_tape[self._stack_num + offset].append(elem)
+            self._closure_stack.append(elem)
+
+        elif instruction == "[":
+            if self._closure_stack:
+                elem = self._closure_stack.pop()
+            else:
+                elem = 0
+
+            self.push(elem)
 
         elif instruction == "`":
             self.move()
@@ -643,19 +659,11 @@ class Golfish():
             self._pos = self._bookmark_pos[:]
             self._dir = self._bookmark_dir
 
-        elif instruction == "u":
-            self._stack_num += 1
-            self._curr_stack = self._stack_tape[self._stack_num]
-
         elif instruction == "w":
             self._marker_stack.append([self._pos[:], self._dir[:]])
                 
         elif instruction == "x":
             self._dir = random.choice(list(DIRECTIONS.values()))
-
-        elif instruction == "y":
-            self._stack_num -= 1
-            self._curr_stack = self._stack_tape[self._stack_num]
 
         elif instruction == "z":
             elem = self.pop()
