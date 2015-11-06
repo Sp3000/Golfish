@@ -42,7 +42,7 @@ S=                    Round
 >                     Move right
 ?                     Conditional: pop and execute next if truthy, else skip 1
 @                     Rotate 3, moving 3rd down to top
-A     alias           Pops y,x and saves [x,y] as the start of a function, along with current direction. Function name is determined by next char. Use B to break/return from function.
+A     alias           Pops y and saves [-1, y] as the start of a function, direction east. Function name is determined by next char. Use B to break/return from function.
 SA    abs             Absolute value
 B     break           Break from loop/return from function
 C     continue        Continue loop, for F and W.
@@ -76,7 +76,7 @@ Y
 Z     zero-cond       Conditional: Pop and execute next if zero/falsy, else skip 1
 [
 \                     Mirror
-]
+]                     Pop n and push n to a "closure stack" to be pushed every iteration for the next function/loop.
 ^                     Move up
 S^                    Bitwise XOR
 _                     

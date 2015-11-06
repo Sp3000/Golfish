@@ -260,12 +260,12 @@ class Golfish():
             return
 
         if instruction in self._function_alias_map:
-            p, d, c = self._function_alias_map[instruction]
+            y, c = self._function_alias_map[instruction]
             
             bookmark = FunctionBookmark(self._pos[:], self._dir[:], c)
             self._bookmark_stack.append(bookmark)
-            self._pos = p[:]
-            self._dir = d[:]
+            self._pos = [-1, y]
+            self._dir = [1, 0]
             self._curr_stack.extend(c[::-1])
             return
 
@@ -420,8 +420,7 @@ class Golfish():
             char = chr(self._board[self._pos[1]][self._pos[0]])
 
             y = self.pop()
-            x = self.pop()
-            self._function_alias_map[char] = [[x, y], self._dir[:], self._closure_stack]
+            self._function_alias_map[char] = [y, self._closure_stack]
             self._closure_stack = []
 
         elif instruction == "B":

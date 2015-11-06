@@ -187,7 +187,7 @@ class TestGolfish(unittest.TestCase):
 
     def test_recursive_collatz(self):
         code = dedent("""\
-                      Im1ACC;
+                      I1ACC;
                       :N :1=?B :2%?v 2S, CB
                                    > 3*P CB""")
 
@@ -237,7 +237,7 @@ class TestGolfish(unittest.TestCase):
 
     def test_fibonacci_recursive(self):
         code = dedent("""\
-                      M1AFIFh
+                      1AFIFh
                       :3(?vM:MF$F+B
                        B1~<""")
 
