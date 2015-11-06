@@ -260,7 +260,7 @@ class Golfish():
                     self.handle_normal_instruction(instruction)
                     self._curr_stack = tmp_stack
 
-    def handle_normal_instruction(self, instruction):        
+    def handle_normal_instruction(self, instruction):
         if instruction in self._variable_map:
             self.push(self._variable_map[instruction])
             return
@@ -850,7 +850,10 @@ class Golfish():
 
 
     def char(self):
-        return chr(self._board[self._pos[1]][self._pos[0]])
+        if self._pos[0]+1 in self._board[self._pos[1]]:
+            return chr(self._board[self._pos[1]][self._pos[0] + 1])
+        
+        return chr(self._board[self._pos[1]][0])
 
 
     def rotate_left(self):
@@ -870,8 +873,9 @@ class Golfish():
             # To do: improve
             string_parse = False
             escape = False
+            depth = -1
 
-            while string_parse or escape or self.char() != '|':
+            while depth or string_parse or escape or self.char() != '|':
                 if self.char() == '`':
                     escape = not escape
 
@@ -881,8 +885,16 @@ class Golfish():
                 elif self.char() in "'\"":
                     string_parse = not string_parse
 
+                elif not string_parse:
+                    if self.char() in "FW":
+                        depth += 1
+
+                    if self.char() == '|':
+                        depth -= 1
+
                 self.move()
 
+            self.move()
 
     def read_char(self):
         if self._input is None:
