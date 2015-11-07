@@ -526,12 +526,11 @@ class Golfish():
             self.push(elem + 1)
 
         elif instruction == "Q":
+            elem = self.pop()
             cond = self.pop()
 
             if not cond:
-                self.to_block_end()
-            else:
-                self._pipe_counter += 1
+                self._skip = elem
 
         elif instruction == "R":
             elem = self.pop()
@@ -929,10 +928,7 @@ class Golfish():
         # To do: improve
         string_parse = False
         escape = False
-        depth = 0
-
-        if self.char() in "FW":
-            self.move()
+        depth = -1
 
         while depth or string_parse or escape or self.char() != '|':
             if self.char() == '`':
@@ -945,7 +941,7 @@ class Golfish():
                 string_parse = not string_parse
 
             elif not string_parse:
-                if self.char() in "FWQ":
+                if self.char() in "FW":
                     depth += 1
 
                 if self.char() == '|':

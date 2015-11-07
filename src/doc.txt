@@ -74,7 +74,7 @@ W     while           While loop. Peeks at top for falsy value. Saves pos/dir. M
 X     xponentiate     Exponentiation
 Y                     
 Z     zero-cond       Conditional: Pop and execute next if zero/falsy, else skip 1
-[                     Move all elements of the current stack to the stack on the left. Move one stack left.
+[                     Move all elements on the current stack to the stack on the left. Move one stack left.
 \                     Mirror
 ]                     Pop n and move the top n elements to the stack to the right. Move one stack right.
 S]                    Like ] but copies top n instead of moving
