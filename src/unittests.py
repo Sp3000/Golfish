@@ -40,6 +40,9 @@ class TestGolfish(unittest.TestCase):
     def test_B(self):
         self.run_test("5FLNL2=?B|;", "0\n1\n2\n")
 
+    def test_C(self):
+        self.run_test("aFL2%?CLN|;", "0\n2\n4\n6\n8\n")
+
     def test_F(self):
         self.run_test("0FLNM|;", "")
         self.run_test("5FLNM|;", "0\n1\n2\n3\n4\n")
@@ -68,6 +71,9 @@ class TestGolfish(unittest.TestCase):
                       """)
         
         self.run_test(code, "103")
+
+    def test_S_trampoline(self):
+        self.run_test('5QSS"SS"h1h', "0")
 
     def test_k(self):
         self.run_test("123450kh", "5")
@@ -255,15 +261,6 @@ class TestGolfish(unittest.TestCase):
 
         for n in range(50):
             self.run_test((code, str(n)), hex(n)[2:])
-
-    @unittest.skip("F instruction reimplemented")
-    def test_partial(self):
-        code = dedent("""\
-                      SI
-                      C>rFlMF:}+
-                      NRl<C}<;""")
-
-        self.run_test((code, "3 | -3, 4, 7, -1, 15"), "-3\n-5\n1\n14\n49\n")
 
     def test_prime_index_primes(self):
         code = dedent("""\

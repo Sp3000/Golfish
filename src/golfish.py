@@ -3,7 +3,7 @@ Gol><>, the slightly golfier version of ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.3.12 (updated 6 Nov 2015)
+Version: 0.4.0 (updated 6 Nov 2015)
 """
 
 import argparse
@@ -133,6 +133,8 @@ class Golfish():
         self._last_loop_counter = 0
 
         self._closure_stack = []
+
+        self._pipe_counter = 0 # For Q and |
 
     def run(self):        
         try:
@@ -524,11 +526,12 @@ class Golfish():
             self.push(elem + 1)
 
         elif instruction == "Q":
-            skip = self.pop()
             cond = self.pop()
 
             if not cond:
-                self._skip = max(0, skip)
+                self.to_block_end()
+            else:
+                self._pipe_counter += 1
 
         elif instruction == "R":
             elem = self.pop()
@@ -592,9 +595,26 @@ class Golfish():
             if condition:
                 self._skip = 1
 
-        elif instruction == "]":
+        elif instruction == '[':
+            buffer, self._stack_tape[self._stack_num] = self._curr_stack, []
+            self.stack_left()
+            self._curr_stack.extend(buffer)
+
+        elif instruction == '_':
             elem = self.pop()
             self._closure_stack.append(elem)
+
+        elif instruction == ']':
+            n = self.pop()
+            buffer = []
+
+            for _ in range(n):
+                buffer.append(self.pop())
+
+            self.stack_right()
+
+            while buffer:
+                self.push(buffer.pop())
 
         elif instruction == "`":
             self.move()
@@ -669,11 +689,17 @@ class Golfish():
             self._pos = self._bookmark_pos[:]
             self._dir = self._bookmark_dir
 
+        elif instruction == 'u':
+            self.stack_right()
+            
         elif instruction == "w":
             self._marker_stack.append([self._pos[:], self._dir[:]])
                 
         elif instruction == "x":
             self._dir = random.choice(list(DIRECTIONS.values()))
+
+        elif instruction == 'y':
+            self.stack_left()
 
         elif instruction == "z":
             elem = self.pop()
@@ -683,7 +709,10 @@ class Golfish():
             self.rotate_left()
 
         elif instruction == "|":
-            self.handle_normal_instruction('C')
+            if self._pipe_counter > 0:
+                self._pipe_counter -= 1
+            else:
+                self.handle_normal_instruction('C')
 
         elif instruction == "}":
             self.rotate_right()
@@ -770,8 +799,8 @@ class Golfish():
             self.push(elem1 // elem2)
             self.push(elem1 % elem2)
 
-        elif instruction == "I":
-            self.read_num(si=True)
+        elif instruction == "E":
+            self.push(int(self._eof))
 
         elif instruction == "L":
             elem2 = self.pop()
@@ -789,6 +818,20 @@ class Golfish():
 
             elem = self.pop()
             self.push(functions[func_num](elem))
+
+        elif instruction == ']':
+            n = self.pop()
+            buffer = []
+
+            for _ in range(n):
+                buffer.append(self.pop())
+
+            self.stack_right()
+
+            while buffer:
+                elem = buffer.pop()
+                self.push(elem)
+                self._stack_tape[self._stack_num-1].append(elem)
 
         elif instruction == "^":
             elem2 = self.pop()
@@ -864,38 +907,54 @@ class Golfish():
         self.push(self.pop(), index=0)
 
 
+    def stack_left(self):
+        self._stack_num -= 1
+        self._curr_stack = self._stack_tape[self._stack_num]
+
+
+    def stack_right(self):
+        self._stack_num += 1
+        self._curr_stack = self._stack_tape[self._stack_num]
+
+
     def bookmark_break(self):
         bookmark = self._bookmark_stack.pop()
         self._pos = bookmark.pos[:]
         self._dir = bookmark.dir[:]
         
         if not isinstance(bookmark, FunctionBookmark):
-            # To do: improve
-            string_parse = False
-            escape = False
-            depth = -1
+            self.to_block_end()
 
-            while depth or string_parse or escape or self.char() != '|':
-                if self.char() == '`':
-                    escape = not escape
+    def to_block_end(self):
+        # To do: improve
+        string_parse = False
+        escape = False
+        depth = 0
 
-                elif escape:
-                    escape = False
+        if self.char() in "FW":
+            self.move()
 
-                elif self.char() in "'\"":
-                    string_parse = not string_parse
+        while depth or string_parse or escape or self.char() != '|':
+            if self.char() == '`':
+                escape = not escape
 
-                elif not string_parse:
-                    if self.char() in "FW":
-                        depth += 1
+            elif escape:
+                escape = False
 
-                    if self.char() == '|':
-                        depth -= 1
+            elif self.char() in "'\"":
+                string_parse = not string_parse
 
-                self.move()
+            elif not string_parse:
+                if self.char() in "FWQ":
+                    depth += 1
+
+                if self.char() == '|':
+                    depth -= 1
 
             self.move()
 
+        self.move()
+        
     def read_char(self):
         if self._input is None:
             if self._input_buffer is not None:

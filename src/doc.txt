@@ -49,11 +49,11 @@ C     continue        Continue loop, for F and W.
 D     debug           Debug, outputting stack to STDERR. Does not count as an instruction for conditionals/trampolines.
 SD    divmod          Pop b,a. Push a//b, a%b
 E     eof-cond        Conditional: if the last input read lead to EOF, pop and execute next, else skip 1.
+SE    eof-flag        Push 1 if the last input read lead to EOF, else 0
 F     for             For loop. Pops n, number of loops. L is loop counter. Saves pos/dir. Moves to after matching | on same row on completion.
 G
 H     halt-char       Output stack as char until empty then halt
 I     input-pos       Numeric input: Read next int/float. Push -1 on EOF.
-SI    input-num       Numeric input: Read next int/float. Change direction to down on EOF.
 J     jump-cond       Conditional jump: pop cond, y, x and jump to (x, y) if cond
 K     kopy-n          Multiple copy: Pop n and copy the top n elements
 L     loop-counter    Loop counter, starts at zero. Refers to last loop if pushed outside of loop.
@@ -74,12 +74,13 @@ W     while           While loop. Peeks at top for falsy value. Saves pos/dir. M
 X     xponentiate     Exponentiation
 Y                     
 Z     zero-cond       Conditional: Pop and execute next if zero/falsy, else skip 1
-[
+[                     Move all elements of the current stack to the stack on the left. Move one stack left.
 \                     Mirror
-]                     Pop n and push n to a "closure stack" to be pushed every iteration for the next function/loop.
+]                     Pop n and move the top n elements to the stack to the right. Move one stack right.
+S]                    Like ] but copies top n instead of moving
 ^                     Move up
 S^                    Bitwise XOR
-_                     
+_                     Pop x and push x to a "closure stack" to be pushed every iteration for the next function/loop.
 `                     Escape next to char, pushing to stack
 a     a-hex           Push 10
 b     b-hex           Push 11
@@ -103,14 +104,13 @@ q     qmark-2         Conditional: pop and execute next if truthy, else skip 2 i
 r     reverse         Reverse stack
 s     sixteen         Pop n, push n+16
 t     teleport        Teleport to last teleport pad
-
-u                     
+u     qwertYUiop      Move one stack right            
 Su    upper           Uppercase
 v                     Move down
 w     while-cond      Push a marker to the marker stack which modifies the next W instruction to be a while(cond) that pops the condition. C teleports to this position instead.
 x                     Random direction
 Sx    like x          Push random float in [0, 1)
-y        
+y     qwertYUiop      Move one stack left
 z     zero-eq         Is zero: Push 1 if zero, else 0
 {                     Shift stack left
 |                     End of loop marker, for F and W.
