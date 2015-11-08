@@ -1,4 +1,6 @@
 import io
+import random
+import statistics
 import sys
 from textwrap import dedent
 import unittest
@@ -123,9 +125,17 @@ class TestGolfishExamples(TestGolfish):
             self.run_test((code, "1 2 5 4 3 7"), "1\n2\n5\n7\n")
             self.run_test((code, "10 10 10 9 10"), "10\n10\n10\n10\n")
 
-    
+    @unittest.skip("Float tolerance")
+    def test_stdev(self):
+        L = [random.random()*100 for _ in range(100)]
+        
+        self.run_test(("IE!tlS]l&lR+&,[jlF-:*}|l&lR+&,12,Xh", L),
+                      statistics.pstdev(L))
 
-    
+    def test_jarvis(self):
+        code = "I:Nw:9)WWaSD$|PlMF$:q*C+P|:N|;"
+        self.run_test((code, "77"), "77\n49\n36\n18\n8\n")
+        self.run_test((code, "806"), "806\n54\n20\n3\n")
 
 if __name__ == '__main__':
     unittest.main()

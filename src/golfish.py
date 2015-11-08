@@ -608,7 +608,7 @@ class Golfish():
                 checker = self.pop
             else:
                 checker = self.peek
-                
+            
             if not checker():
                 self.bookmark_break()
             else:
@@ -982,7 +982,7 @@ class Golfish():
         start_pos = self._pos[:]
         self.move()
 
-        while self.char(num=False) in "FWQ":
+        if self.char(num=False) in "FWQ":
             self.move()
         
         string_parse = False
