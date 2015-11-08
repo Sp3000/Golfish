@@ -46,7 +46,7 @@ A     alias           Pops y and saves [-1, y] as the start of a function, direc
 SA    abs             Absolute value
 B     break           Break from loop/return from function
 C     continue        Continue loop, for F and W.
-D     debug           Debug, outputting stack to STDERR. Does not count as an instruction for conditionals/trampolines.
+D     debug           Debug, outputting stack to STDOUT.
 SD    divmod          Pop b,a. Push a//b, a%b
 E     eof-cond        Conditional: if the last input read lead to EOF, pop and execute next, else skip 1.
 SE    eof-flag        Push 1 if the last input read lead to EOF, else 0
@@ -63,11 +63,11 @@ N     num-out-nl      Output as num + trailing newline
 O                     
 P     plus-1          Plus 1
 SP    prime           Primality test
-Q     qmark-any       Conditional: Pop n, then pop and execute next if truthy, else skip n instructions
+Q     qmark-any       Conditional: pop and execute next if truth, else skip to matching |
 R     repeat          Pop n, repeat next instruction n times (experimental)
 S     switch          Toggle functionality of next instruction
 T     teleport-pad    Set teleport pad, saving pos/dir
-ST    trig            Trig library: pop k, n and push application of k-th function from [sin, cos, tan, sinh, cosh, tanh, asin, acos, atan, atan2, asinh, acosh, atanh] to n.
+ST    trig            Trig library: pop k, n and push application of k-th function from [sin, cos, tan, sinh, cosh, tanh, asin, acos, atan, asinh, acosh, atanh, atan2] to n.
 U                      
 V     var             Pops element and re-pushes it. Saves element to variable with name determined by next char (don't pick L).
 W     while           While loop. Peeks at top for falsy value. Saves pos/dir. Moves to after matching | on same row on completion. Modifiable with w instruction.
@@ -113,7 +113,7 @@ Sx    like x          Push random float in [0, 1)
 y     qwertYUiop      Move one stack left
 z     zero-eq         Is zero: Push 1 if zero, else 0
 {                     Shift stack left
-|                     End of loop marker, for F and W.
+|                     End marker, for F, Q, W
 S|                    Bitwise OR
 }                     Shift stack right
 ~                     Pop and discard

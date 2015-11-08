@@ -84,6 +84,11 @@ class FunctionBookmark(Bookmark):
         super().__init__(pos, dir_, closure_stack)
 
 
+class IfBookmark(Bookmark):
+    def __init__(self, pos, dir_):
+        super().__init__(pos, dir_, None)
+
+
 class Golfish():
     def __init__(self, code="", input_=None, debug=False, online=False):
         rows = code.split("\n")
@@ -133,8 +138,6 @@ class Golfish():
         self._last_loop_counter = 0
 
         self._closure_stack = []
-
-        self._pipe_counter = 0 # For Q and |
 
     def run(self):        
         try:
@@ -219,16 +222,6 @@ class Golfish():
 
         if instruction == "S" and not self._toggled:
             self._toggled = True
-            return
-
-        if instruction == "D" and not self._toggled:
-            output = str(self._curr_stack).replace(",", "")
-
-            if self._online:
-                print(output, file=sys.stdout)
-            else:
-                print(output, file=sys.stderr)
-
             return
 
         if self._skip > 0:
@@ -438,8 +431,10 @@ class Golfish():
                 raise InvalidStateException("Break from non-loop/function")
 
         elif instruction == "C":
-            if self._bookmark_stack and (isinstance(self._bookmark_stack[-1], WhileBookmark)
-                                         or isinstance(self._bookmark_stack[-1], ForBookmark)):
+            while self._bookmark_stack and isinstance(self._bookmark_stack[-1], IfBookmark):
+                self._bookmark_stack.pop()
+
+            if self._bookmark_stack and isinstance(self._bookmark_stack[-1], LoopBookmark):
                 bookmark = self._bookmark_stack[-1]
                 self._pos = bookmark.pos[:]
                 self._dir = bookmark.dir[:]
@@ -449,10 +444,10 @@ class Golfish():
                         self._dir = bookmark.w_marker[1][:]
 
             else:
-                raise InvalidStateException("Continue from non-loop")    
+                raise InvalidStateException("Continue from non-loop")
 
         elif instruction == "D":
-            raise InvalidStateException # Shouldn't reach here
+            self.output(str(self._curr_stack).replace(',', '') + '\n')
 
         elif instruction == "E":
             if self._eof:
@@ -490,7 +485,31 @@ class Golfish():
             self.halt()
 
         elif instruction == "I":
-            self.read_num(si=False)
+            num = ""
+            char = self.read_char()
+
+            while char >= 0 and chr(char) not in "-0123456789.":
+                char = self.read_char()
+
+            while char >= 0 and chr(char) in "-0123456789.":
+                if chr(char) == '.' and '.' in num:
+                    break
+
+                if chr(char) == '-' and num:
+                    break
+
+                num += chr(char)
+                char = self.read_char()
+
+            self._input_buffer = char
+
+            if num:
+                num = float(num)
+                self.push(int(num) if num == int(num) else num)
+
+            else:
+                self._eof = True
+                self.push(-1)
 
         elif instruction == "J":
             y = self.pop()
@@ -526,11 +545,18 @@ class Golfish():
             self.push(elem + 1)
 
         elif instruction == "Q":
-            elem = self.pop()
-            cond = self.pop()
+            if self._bookmark_stack and self._bookmark_stack[-1].pos == self.pos_before():
+                self.bookmark_break()
+                
+            else:
+                cond = self.pop()
 
-            if not cond:
-                self._skip = elem
+                if cond:
+                    bookmark = IfBookmark(self.pos_before(), self._dir[:])
+                    self._bookmark_stack.append(bookmark)
+
+                else:
+                    self.to_block_end()
 
         elif instruction == "R":
             elem = self.pop()
@@ -708,10 +734,20 @@ class Golfish():
             self.rotate_left()
 
         elif instruction == "|":
-            if self._pipe_counter > 0:
-                self._pipe_counter -= 1
+            if self._bookmark_stack and isinstance(self._bookmark_stack[-1], IfBookmark):
+                self._bookmark_stack.pop()
+                
+            elif self._bookmark_stack and isinstance(self._bookmark_stack[-1], LoopBookmark):
+                bookmark = self._bookmark_stack[-1]
+                self._pos = bookmark.pos[:]
+                self._dir = bookmark.dir[:]
+
+                if isinstance(bookmark, WhileBookmark) and bookmark.w_marker:
+                        self._pos = bookmark.w_marker[0][:]
+                        self._dir = bookmark.w_marker[1][:]
+
             else:
-                self.handle_normal_instruction('C')
+                raise InvalidStateException("Unexpected if/loop end")
 
         elif instruction == "}":
             self.rotate_right()
@@ -813,10 +849,10 @@ class Golfish():
         elif instruction == "T":
             func_num = self.pop()
             functions = [math.sin, math.cos, math.tan, math.sinh, math.cosh, math.tanh,
-                         math.asin, math.acos, math.atan, math.atan2, math.asinh, math.acosh, math.atanh]
+                         math.asin, math.acos, math.atan, math.asinh, math.acosh, math.atanh, math.atan2]
 
             elem = self.pop()
-            self.push(functions[func_num](elem))
+            self.push(functions[func_num % len(functions)](elem))
 
         elif instruction == ']':
             n = self.pop()
@@ -928,7 +964,7 @@ class Golfish():
         # To do: improve
         string_parse = False
         escape = False
-        depth = -1
+        depth = -(self.char() in "FWQ")
 
         while depth or string_parse or escape or self.char() != '|':
             if self.char() == '`':
@@ -941,23 +977,22 @@ class Golfish():
                 string_parse = not string_parse
 
             elif not string_parse:
-                if self.char() in "FW":
+                if self.char() in "FWQ":
                     depth += 1
 
                 if self.char() == '|':
                     depth -= 1
 
             self.move()
-
         self.move()
         
     def read_char(self):
+        if self._input_buffer is not None:
+            char = self._input_buffer
+            self._input_buffer = None
+            return char
+            
         if self._input is None:
-            if self._input_buffer is not None:
-                char = self._input_buffer
-                self._input_buffer = None
-                return char
-
             if sys.stdin.isatty():
                 # Console
                 char = getch()
@@ -983,40 +1018,6 @@ class Golfish():
             else:
                 self._eof = True
                 return EOF
-
-    def read_num(self, si=False):
-        num = ""
-        dots = 0
-        char = self.read_char()
-
-        while char >= 0 and chr(char) not in "-0123456789.":
-            char = self.read_char()
-
-        while char >= 0 and chr(char) in "-0123456789.":
-            if char == ord(".") and dots > 0:
-                break
-
-            if char == ord("-") and num:
-                break
-
-            num += chr(char)
-            dots += (char == ord("."))
-            char = self.read_char()
-
-        self._input_buffer = char
-
-        if num:
-            num = float(num)
-            self.push(int(num) if num == int(num) else num)
-
-        else:
-            self._eof = True
-
-            if si:
-                self._dir = DIRECTIONS["v"]
-            else:
-                self.push(-1)
-
 
     def output(self, out):
         sys.stdout.write(out)
