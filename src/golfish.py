@@ -3,7 +3,7 @@ Gol><>, the slightly golfier version of ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.4.0 (updated 6 Nov 2015)
+Version: 0.4.0 (updated 9 Nov 2015)
 """
 
 import argparse
@@ -669,7 +669,7 @@ class Golfish():
             char = self.read_char()
 
             if char == EOF:
-                self.eof = True
+                self._eof = True
 
             self.push(char)
 
@@ -1012,6 +1012,7 @@ class Golfish():
                 raise InvalidStateException("Missing | end")
         
     def read_char(self):
+        # Note: self._eof not set here, but in input instructions
         if self._input_buffer is not None:
             char = self._input_buffer
             self._input_buffer = None
@@ -1031,7 +1032,6 @@ class Golfish():
             if char:
                 return ord(char)
             else:
-                self._eof = True
                 return EOF
 
         else:
@@ -1041,7 +1041,6 @@ class Golfish():
                 return ord(c)
 
             else:
-                self._eof = True
                 return EOF
 
     def output(self, out):

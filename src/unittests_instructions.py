@@ -174,7 +174,7 @@ class TestGolfishInstructions(TestGolfish):
         pass
 
     def test_V(self):
-        self.run_test("5VXDXXXD;", "[5]\n[5 5 5]\n")
+        self.run_test("5VXDXXXD;", "[5]\n[5 5 5 5]\n")
         self.run_test("VVVVVD;", "[0 0 0 0]\n")
 
     def test_W(self):

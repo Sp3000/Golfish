@@ -29,5 +29,10 @@ class TestGolfishCore(TestGolfish):
                       
         self.run_test(code, "a b\0")
 
+    def test_eof(self):
+        self.run_test(("INE;IN;", "5"), "5\n-1\n")
+        self.run_test(("INE;IN;", "5 "), "5\n-1\n")
+        self.run_test(("INE;IN;", "5 6"), "5\n6\n")
+
 if __name__ == '__main__':
     unittest.main()

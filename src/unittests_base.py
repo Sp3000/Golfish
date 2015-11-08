@@ -12,7 +12,8 @@ class TestGolfish(unittest.TestCase):
         if isinstance(prog, str):
             gf = Golfish(prog, online=True, debug=True, tick_limit=10000)
         else:
-            gf = Golfish(*prog, online=True, debug=True, tick_limit=10000)
+            gf = Golfish(prog[0], str(prog[1]), online=True,
+                         debug=True, tick_limit=10000)
 
         gf.run()
         self.assertEqual(self.output(), str(output))

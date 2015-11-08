@@ -34,14 +34,13 @@ class TestGolfishExamples(TestGolfish):
         iterative = "10IT:zq~hM}:@+{t"
         recursive = dedent("""\
                            1AFIFh
-                           :2(?vM:MF$F+B
-                            B1~<""")
+                           :2(?BM:MF$F+B""")
 
         a, b = 0, 1
 
         for i in range(10):
-            self.run_test((iterative, str(i)), a)
-            self.run_test((recursive, str(i)), b)
+            self.run_test((iterative, i), a)
+            self.run_test((recursive, i), a)
             a, b = b, a+b
 
     def test_factorial(self):
@@ -84,6 +83,49 @@ class TestGolfishExamples(TestGolfish):
             o += (("Fizz"*(i%3<1) + "Buzz"*(i%5<1)) or str(i)) + '\n'
 
         self.run_test('`e2RFL3%zQS"Fizz"P|L5%zQS"Buzz"P|Q~aoC|LN|;', o)
+
+    def test_2spooky(self):
+        for i in range(10):
+            self.run_test(('I:n"emykoops"6Ro{2+nH', i), "{}spooky{}me".format(i, i+2))
+
+    def test_cat(self):
+        self.run_test(("iE;o", "Hello,\0World!"), "Hello,\0World!")
+
+    def test_fen_string(self):
+        code = '"QRBNP"133595F{2K3pSl&m*&3p|TiEh3g+t'
+
+        self.run_test((code, "5k2/ppp5/4P3/3R3p/6P1/1K2Nr2/PP3P2/8"), 4)
+        self.run_test((code, "QQn"), 15)    
+    
+    def test_small_caps(self):
+        code = dedent("""\
+                      iE;:Sl:@Su=zQ`a-1g|o
+                      ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀꜱᴛᴜᴠᴡxʏᴢ""")
+
+        self.run_test((code, "Hello, World!"), "ʜᴇʟʟᴏ, ᴡᴏʀʟᴅ!")
+
+    def test_counting_sort(self):
+        code = dedent("""\
+                      iEv:2gP$2p
+                      rH>ff*FL2gRL|""")
+
+        self.run_test((code, "Hello, World!"), " !,HWdellloor")
+
+    def test_dropsort(self):
+        code1 = dedent("""\
+                       I:N\!
+                       ;EI/!~q)K2""")
+        code2 = "I:NTIE;2K)q~t!"
+
+        for code in [code1, code2]:
+            self.run_test((code, "-7 -8 -5 0 -1 1 1 -5"), "-7\n-5\n0\n1\n1\n")
+            self.run_test((code, "9 8 7 6 5"), "9\n")
+            self.run_test((code, "1 2 5 4 3 7"), "1\n2\n5\n7\n")
+            self.run_test((code, "10 10 10 9 10"), "10\n10\n10\n10\n")
+
+    
+
+    
 
 if __name__ == '__main__':
     unittest.main()
