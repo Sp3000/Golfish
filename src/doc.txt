@@ -80,7 +80,7 @@ Z     zero-cond       Conditional: Pop and execute next if zero/falsy, else skip
 S]                    Like ] but copies top n instead of moving
 ^                     Move up
 S^                    Bitwise XOR
-_                     Pop x and push x to a "closure stack" to be pushed every iteration for the next function/loop.
+_                     
 `                     Escape next to char, pushing to stack
 a     a-hex           Push 10
 b     b-hex           Push 11
@@ -91,7 +91,7 @@ f     f-hex           Push 15
 g     get             Pop y, x and push char at (x, y)
 h     halt-num        Halt and output top of stack as num
 i     input-char      Read char, pushes -1 on EOF
-j                     
+j     clojure         Pop x and push x to a "closure stack" to be pushed every iteration for the next function/loop.
 k     kopy-nth        Get nth element down (top is 0). Indices wrap.
 l     length          Push length of stack
 Sl    lower           Lowercase

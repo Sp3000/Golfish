@@ -29,8 +29,5 @@ class TestGolfishCore(TestGolfish):
                       
         self.run_test(code, "a b\0")
 
-    def test_nesting(self):
-        self.run_test(
-
 if __name__ == '__main__':
     unittest.main()

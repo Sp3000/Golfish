@@ -141,10 +141,10 @@ class TestGolfishInstructions(TestGolfish):
         self.run_test("5Mh", "4")
 
     def test_N(self):
-        self.run_test("N;", "0")
-        self.run_test("ff*N;", "255")
-        self.run_test("12,N;", 0.5)
-        self.run_test("42,N;", "2")
+        self.run_test("N;", "0\n")
+        self.run_test("ff*N;", "225\n")
+        self.run_test("12,N;", str(0.5) + '\n')
+        self.run_test("42,N;", "2\n")
 
     def test_O(self):
         pass
@@ -156,10 +156,29 @@ class TestGolfishInstructions(TestGolfish):
     def test_Q(self):
         self.run_test("1Q'Hi'oo|;", "iH")
         self.run_test("0Q'Hi'oo|;", "")
+        self.run_test("35,Q'Hi'oo|;", "iH")
+        self.run_test("1Q|;", "")
+        self.run_test("0Q|;", "")
+        self.run_test("1Q 2n 1Q 3n 0Q 4n | 5n | 6n 1Q 7n | 8n |;", "235678")
 
-    
-        
-    
+    def test_R(self):
+        pass
+
+    def test_S(self):
+        pass
+
+    def test_Tt(self):
+        pass
+
+    def test_U(self):
+        pass
+
+    def test_V(self):
+        self.run_test("5VXDXXXD;", "[5]\n[5 5 5]\n")
+        self.run_test("VVVVVD;", "[0 0 0 0]\n")
+
+    def test_W(self):
+        pass
         
 if __name__ == '__main__':
     unittest.main()

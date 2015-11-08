@@ -67,6 +67,7 @@ class LoopBookmark(Bookmark):
     def increment_counter(self):
         self.counter += 1
 
+
 class WhileBookmark(LoopBookmark):
      def __init__(self, pos, dir_, closure_stack, w_marker=None):
          super().__init__(pos, dir_, closure_stack)
@@ -90,7 +91,7 @@ class IfBookmark(Bookmark):
 
 
 class Golfish():
-    def __init__(self, code="", input_=None, debug=False, online=False):
+    def __init__(self, code="", input_=None, debug=False, online=False, tick_limit=None):
         rows = code.split("\n")
         self._board = defaultdict(lambda: defaultdict(int))
         x = y = 0
@@ -106,6 +107,9 @@ class Golfish():
 
         self._pos = [-1, 0] # [x, y]
         self._dir = DIRECTIONS[">"]
+
+        self._ticks = 0
+        self._tick_limit = tick_limit
 
         self._stack_tape = defaultdict(list)
         self._curr_stack = self._stack_tape[0]
@@ -156,6 +160,15 @@ class Golfish():
                 else:
                     raise e
 
+        except TimeoutError as e:
+            print("[Timeout]", file=sys.stderr)
+
+            if self._debug:
+                if self._online:
+                    traceback.print_exc(file=sys.stdout)
+                else:
+                    raise e
+
         except Exception as e:
             pos = self._pos
             char = self._board[pos[1]][pos[0]]
@@ -183,20 +196,23 @@ class Golfish():
                 else:
                     raise e
 
+
     def tick(self):
         self.move()
 
         if self._pos[1] in self._board and self._pos[0] in self._board[self._pos[1]]:
             self.handle_instruction(self._board[self._pos[1]][self._pos[0]])
 
+        self._ticks += 1
+
+        if self._tick_limit is not None and self._ticks > self._tick_limit:
+            raise TimeoutError
+
 
     def move(self):
-        if any(not isinstance(coord, int) for coord in self._pos):
-            raise InvalidStateException
-
         # Move forward one step
-        self._pos[0] += self._dir[0]
-        self._pos[1] += self._dir[1]
+        self._pos[0] = int(self._pos[0]) + self._dir[0]
+        self._pos[1] = int(self._pos[1]) + self._dir[1]
 
         # Wrap around
         if self._pos[1] in self._board:
@@ -255,6 +271,7 @@ class Golfish():
                     self.handle_normal_instruction(instruction)
                     self._curr_stack = tmp_stack
 
+
     def handle_normal_instruction(self, instruction):
         if instruction in self._variable_map:
             self.push(self._variable_map[instruction])
@@ -279,10 +296,10 @@ class Golfish():
         elif instruction in DIGITS:
             self.push(DIGITS.index(instruction))
 
-        elif instruction == " ":
+        elif instruction == ' ':
             pass
 
-        elif instruction == "!":
+        elif instruction == '!':
             self._skip += 1
 
         elif instruction in '"\'':
@@ -318,20 +335,20 @@ class Golfish():
 
             self._curr_stack.extend(parse_buffer)
 
-        elif instruction == "$":
+        elif instruction == '$':
             elem2 = self.pop()
             elem1 = self.pop()
 
             self.push(elem2)
             self.push(elem1)
             
-        elif instruction == "%":
+        elif instruction == '%':
             elem2 = self.pop()
             elem1 = self.pop()
 
             self.push(elem1 % elem2)
 
-        elif instruction == "&":
+        elif instruction == '&':
             if self._register_tape[self._stack_num] is None:
                 self._register_tape[self._stack_num] = self.pop()
 
@@ -339,75 +356,70 @@ class Golfish():
                 self.push(self._register_tape[self._stack_num])
                 self._register_tape[self._stack_num] = None
 
-        elif instruction == "(":
+        elif instruction == '(':
             elem2 = self.pop()
             elem1 = self.pop()
 
             self.push(1 if elem1 < elem2 else 0)
 
-        elif instruction == ")":
+        elif instruction == ')':
             elem2 = self.pop()
             elem1 = self.pop()
 
             self.push(1 if elem1 > elem2 else 0)
 
-        elif instruction == "*":
+        elif instruction == '*':
             elem2 = self.pop()
             elem1 = self.pop()
 
             self.push(elem1 * elem2)
 
-        elif instruction == "+":
+        elif instruction == '+':
             elem2 = self.pop()
             elem1 = self.pop()
 
             self.push(elem1 + elem2)
 
-        elif instruction == ",":
+        elif instruction == ',':
             elem2 = self.pop()
             elem1 = self.pop()
 
-            div = elem1 / elem2
+            self.push(elem1 / elem2)
 
-            if int(div) == div:
-                div = int(div)
-                
-            self.push(div)
-
-        elif instruction == "-":
+        elif instruction == '-':
             elem2 = self.pop()
             elem1 = self.pop()
 
             self.push(elem1 - elem2)
 
-        elif instruction == ".":
+        elif instruction == '.':
             y = self.pop()
             x = self.pop()
 
             self._pos = [x, y]
 
-        elif instruction == ":":
+        elif instruction == ':':
             elem = self.pop()
 
             self.push(elem)
             self.push(elem)
             
-        elif instruction == ";":
+        elif instruction == ';':
             self.halt()
 
-        elif instruction == "=":
+        elif instruction == '=':
             elem2 = self.pop()
             elem1 = self.pop()
 
             self.push(1 if elem1 == elem2 else 0)
 
-        elif instruction == "?":
+        elif instruction == '?':
             condition = self.pop()
 
             if not condition:
                 self._skip = 1
 
-        elif instruction == "@":
+        elif instruction == '@':
             elem3 = self.pop()
             elem2 = self.pop()
             elem1 = self.pop()
@@ -416,21 +428,21 @@ class Golfish():
             self.push(elem3)
             self.push(elem1)
 
-        elif instruction == "A":
+        elif instruction == 'A':
             self.move()
-            char = chr(self._board[self._pos[1]][self._pos[0]])
+            char = self.char(num=False)
 
             y = self.pop()
             self._function_alias_map[char] = [y, self._closure_stack]
             self._closure_stack = []
 
-        elif instruction == "B":
+        elif instruction == 'B':
             if self._bookmark_stack:
                 self.bookmark_break()
             else:
                 raise InvalidStateException("Break from non-loop/function")
 
-        elif instruction == "C":
+        elif instruction == 'C':
             while self._bookmark_stack and isinstance(self._bookmark_stack[-1], IfBookmark):
                 self._bookmark_stack.pop()
 
@@ -446,16 +458,16 @@ class Golfish():
             else:
                 raise InvalidStateException("Continue from non-loop")
 
-        elif instruction == "D":
+        elif instruction == 'D':
             self.output(str(self._curr_stack).replace(',', '') + '\n')
 
-        elif instruction == "E":
+        elif instruction == 'E':
             if self._eof:
                 self.pop()
             else:
                 self._skip = 1
 
-        elif instruction == "F":
+        elif instruction == 'F':
             if self._bookmark_stack and self._bookmark_stack[-1].pos == self.pos_before():
                 self._bookmark_stack[-1].increment_counter()
                 self._last_loop_counter = self._bookmark_stack[-1].counter
@@ -473,18 +485,17 @@ class Golfish():
                 self._bookmark_stack[-1].counter >= self._bookmark_stack[-1].limit):
 
                 self.bookmark_break()
-
             else:
                 self._curr_stack.extend(self._bookmark_stack[-1].closure_stack)
 
-        elif instruction == "H":
+        elif instruction == 'H':
             while self._curr_stack:
                 elem = self.pop()
                 self.output_as_char(elem)
 
             self.halt()
 
-        elif instruction == "I":
+        elif instruction == 'I':
             num = ""
             char = self.read_char()
 
@@ -511,7 +522,7 @@ class Golfish():
                 self._eof = True
                 self.push(-1)
 
-        elif instruction == "J":
+        elif instruction == 'J':
             y = self.pop()
             x = self.pop()
             condition = self.pop()
@@ -519,32 +530,32 @@ class Golfish():
             if condition:
                 self._pos = [x, y]
 
-        elif instruction == "K":
+        elif instruction == 'K':
             elem = self.pop()
             popped = [self.pop() for _ in range(elem)][::-1]
 
             self._curr_stack.extend(popped)
             self._curr_stack.extend(popped)
 
-        elif instruction == "L":
+        elif instruction == 'L':
             if self._bookmark_stack and isinstance(self._bookmark_stack[-1], LoopBookmark):
                 self.push(self._bookmark_stack[-1].counter)
             else:
                 self.push(self._last_loop_counter)
 
-        elif instruction == "M":
+        elif instruction == 'M':
             elem = self.pop()
             self.push(elem - 1)
 
-        elif instruction == "N":
+        elif instruction == 'N':
             self.output_as_num(self.pop())
-            self.output("\n")
+            self.output('\n')
 
-        elif instruction == "P":
+        elif instruction == 'P':
             elem = self.pop()
             self.push(elem + 1)
 
-        elif instruction == "Q":
+        elif instruction == 'Q':
             if self._bookmark_stack and self._bookmark_stack[-1].pos == self.pos_before():
                 self.bookmark_break()
                 
@@ -554,30 +565,29 @@ class Golfish():
                 if cond:
                     bookmark = IfBookmark(self.pos_before(), self._dir[:])
                     self._bookmark_stack.append(bookmark)
-
                 else:
                     self.to_block_end()
 
-        elif instruction == "R":
+        elif instruction == 'R':
             elem = self.pop()
             self._R_repeat = elem
 
-        elif instruction == "S":
+        elif instruction == 'S':
             raise InvalidStateException # Shouldn't reach here
 
-        elif instruction == "T":
+        elif instruction == 'T':
             self._bookmark_pos = self._pos[:]
-            self._bookmark_dir = self._dir
+            self._bookmark_dir = self._dir[:]
 
-        elif instruction == "V":
+        elif instruction == 'V':
             self.move()
-            char = chr(self._board[self._pos[1]][self._pos[0]])
+            char = self.char(num=False)
 
             elem = self.pop()
             self.push(elem)
             self._variable_map[char] = elem
 
-        elif instruction == "W":
+        elif instruction == 'W':
             if self._bookmark_stack and self._bookmark_stack[-1].pos == self.pos_before():
                 self._bookmark_stack[-1].increment_counter()
                 self._last_loop_counter = self._bookmark_stack[-1].counter
@@ -604,17 +614,17 @@ class Golfish():
             else:
                 self._curr_stack.extend(self._bookmark_stack[-1].closure_stack)
 
-        elif instruction == "X":
+        elif instruction == 'X':
             elem2 = self.pop()
             elem1 = self.pop()
             result = elem1 ** elem2
 
             if isinstance(result, complex):
-                raise InvalidStateException
+                raise InvalidStateException("Computation resulted in a complex number")
             
             self.push(result)
 
-        elif instruction == "Z":
+        elif instruction == 'Z':
             condition = self.pop()
 
             if condition:
@@ -624,10 +634,6 @@ class Golfish():
             buffer, self._stack_tape[self._stack_num] = self._curr_stack, []
             self.stack_left()
             self._curr_stack.extend(buffer)
-
-        elif instruction == '_':
-            elem = self.pop()
-            self._closure_stack.append(elem)
 
         elif instruction == ']':
             n = self.pop()
@@ -641,12 +647,12 @@ class Golfish():
             while buffer:
                 self.push(buffer.pop())
 
-        elif instruction == "`":
+        elif instruction == '`':
             self.move()
-            char = self._board[self._pos[1]][self._pos[0]]
+            char = self.char()
             self.push(char)
 
-        elif instruction == "g":
+        elif instruction == 'g':
             y = self.pop()
             x = self.pop()
 
@@ -655,11 +661,11 @@ class Golfish():
             else:
                 self.push(0)
 
-        elif instruction == "h":
+        elif instruction == 'h':
             self.output_as_num(self.pop())
             self.halt()
 
-        elif instruction == "i":
+        elif instruction == 'i':
             char = self.read_char()
 
             if char == EOF:
@@ -667,7 +673,11 @@ class Golfish():
 
             self.push(char)
 
-        elif instruction == "k":
+        elif instruction == 'j':
+            elem = self.pop()
+            self._closure_stack.append(elem)
+
+        elif instruction == 'k':
             elem = self.pop()
 
             if self._curr_stack:
@@ -675,19 +685,19 @@ class Golfish():
             else:
                 self.push(0)
 
-        elif instruction == "l":
+        elif instruction == 'l':
             self.push(len(self._curr_stack))
 
-        elif instruction == "m":
+        elif instruction == 'm':
             self.push(-1)
 
-        elif instruction == "n":
+        elif instruction == 'n':
             self.output_as_num(self.pop())
 
-        elif instruction == "o":
+        elif instruction == 'o':
             self.output_as_char(self.pop())
 
-        elif instruction == "p":
+        elif instruction == 'p':
             elem3 = self.pop()
             elem2 = self.pop()
             elem1 = self.pop()
@@ -697,43 +707,43 @@ class Golfish():
             char = elem1
             self._board[y][x] = char                  
                     
-        elif instruction == "q":
+        elif instruction == 'q':
             cond = self.pop()
 
             if not cond:
                 self._skip = 2
 
-        elif instruction == "r":
+        elif instruction == 'r':
             self._curr_stack.reverse()
 
-        elif instruction == "s":
+        elif instruction == 's':
             elem = self.pop()
             self.push(elem + 16)
 
-        elif instruction == "t":
+        elif instruction == 't':
             self._pos = self._bookmark_pos[:]
-            self._dir = self._bookmark_dir
+            self._dir = self._bookmark_dir[:]
 
         elif instruction == 'u':
             self.stack_right()
             
-        elif instruction == "w":
+        elif instruction == 'w':
             self._marker_stack.append([self._pos[:], self._dir[:]])
                 
-        elif instruction == "x":
+        elif instruction == 'x':
             self._dir = random.choice(list(DIRECTIONS.values()))
 
         elif instruction == 'y':
             self.stack_left()
 
-        elif instruction == "z":
+        elif instruction == 'z':
             elem = self.pop()
             self.push(0 if elem else 1)
 
-        elif instruction == "{":
+        elif instruction == '{':
             self.rotate_left()
 
-        elif instruction == "|":
+        elif instruction == '|':
             if self._bookmark_stack and isinstance(self._bookmark_stack[-1], IfBookmark):
                 self._bookmark_stack.pop()
                 
@@ -749,10 +759,10 @@ class Golfish():
             else:
                 raise InvalidStateException("Unexpected if/loop end")
 
-        elif instruction == "}":
+        elif instruction == '}':
             self.rotate_right()
 
-        elif instruction == "~":
+        elif instruction == '~':
             self.pop()
 
         else:
@@ -772,9 +782,10 @@ class Golfish():
                     escapes.update({parse_char: parse_char})
 
                     if char in escapes:
-                        self.output(chr(escapes[char]))
+                        self.output_as_char(escapes[char])
                     else:
-                        self.output('`' + chr(char))
+                        self.output('`')
+                        self.output_as_char(char)
 
                     escaped = False
 
@@ -782,71 +793,71 @@ class Golfish():
                     if char == ord('`'):
                         escaped = True
                     else:
-                        self.output(chr(char))
+                        self.output_as_char(char)
 
                 self.move()
                 char = self._board[self._pos[1]][self._pos[0]]
         
-        elif instruction == "%":
+        elif instruction == '%':
             elem2 = self.pop()
             elem1 = self.pop()
 
             self.push(gcd(elem1, elem2))
 
-        elif instruction == "&":
+        elif instruction == '&':
             elem2 = self.pop()
             elem1 = self.pop()
 
             self.push(elem1 & elem2)
 
-        elif instruction == "(":
+        elif instruction == '(':
             elem = self.pop()
             self.push(math.floor(elem))
 
-        elif instruction == ")":
+        elif instruction == ')':
             elem = self.pop()
             self.push(math.ceil(elem))
 
-        elif instruction == ",":
+        elif instruction == ',':
             elem2 = self.pop()
             elem1 = self.pop()
 
             self.push(int(elem1 // elem2))
 
-        elif instruction == "2":
+        elif instruction == '2':
             self.push(math.e)
 
-        elif instruction == "3":
+        elif instruction == '3':
             self.push(math.pi)
 
-        elif instruction == "=":
+        elif instruction == '=':
             elem = self.pop()
             self.push(round(elem))
 
-        elif instruction == "A":
+        elif instruction == 'A':
             elem = self.pop()
             self.push(abs(elem))
 
-        elif instruction == "D":
+        elif instruction == 'D':
             elem2 = self.pop()
             elem1 = self.pop()
 
             self.push(elem1 // elem2)
             self.push(elem1 % elem2)
 
-        elif instruction == "E":
+        elif instruction == 'E':
             self.push(int(self._eof))
 
-        elif instruction == "L":
+        elif instruction == 'L':
             elem2 = self.pop()
             elem1 = self.pop()
             self.push(math.log(elem1, elem2))
 
-        elif instruction == "P":
+        elif instruction == 'P':
             elem = self.pop()
             self.push(1 if is_probably_prime(elem) else 0)
 
-        elif instruction == "T":
+        elif instruction == 'T':
             func_num = self.pop()
             functions = [math.sin, math.cos, math.tan, math.sinh, math.cosh, math.tanh,
                          math.asin, math.acos, math.atan, math.asinh, math.acosh, math.atanh, math.atan2]
@@ -868,29 +879,29 @@ class Golfish():
                 self.push(elem)
                 self._stack_tape[self._stack_num-1].append(elem)
 
-        elif instruction == "^":
+        elif instruction == '^':
             elem2 = self.pop()
             elem1 = self.pop()
 
             self.push(elem1 ^ elem2)
 
-        elif instruction == "l":
-            elem = chr(self.pop())
+        elif instruction == 'l':
+            elem = self.chr(self.pop())
             self.push(ord(elem.lower()))
 
-        elif instruction == "n":
+        elif instruction == 'n':
             places = self.pop()
             num = self.pop()
             self.output("{{:.{}f}}".format(places).format(float(num)))
 
-        elif instruction == "u":
-            elem = chr(self.pop())
+        elif instruction == 'u':
+            elem = self.chr(self.pop())
             self.push(ord(elem.upper()))
 
-        elif instruction == "x":
+        elif instruction == 'x':
             self.push(random.random())
 
-        elif instruction == "|":
+        elif instruction == '|':
             elem2 = self.pop()
             elem1 = self.pop()
 
@@ -901,9 +912,11 @@ class Golfish():
 
 
     def push(self, elem, index=None):
+        if elem == int(elem):
+            elem = int(elem)
+
         if index is None:
             self._curr_stack.append(elem)
-
         else:
             self._curr_stack.insert(index, elem)
 
@@ -927,11 +940,15 @@ class Golfish():
             return 0
 
 
-    def char(self):
-        if self._pos[0]+1 in self._board[self._pos[1]]:
-            return chr(self._board[self._pos[1]][self._pos[0] + 1])
-        
-        return chr(self._board[self._pos[1]][0])
+    def char(self, num=True):
+        if num:
+            return self._board[self._pos[1]][self._pos[0]]
+        else:
+            return self.chr(self._board[self._pos[1]][self._pos[0]])
+
+
+    def chr(self, elem):
+        return chr(int(elem))
 
 
     def rotate_left(self):
@@ -961,30 +978,38 @@ class Golfish():
             self.to_block_end()
 
     def to_block_end(self):
-        # To do: improve
+        # TODO: improve
+        start_pos = self._pos[:]
+        self.move()
+
+        while self.char(num=False) in "FWQ":
+            self.move()
+        
         string_parse = False
         escape = False
-        depth = -(self.char() in "FWQ")
+        depth = 0
 
-        while depth or string_parse or escape or self.char() != '|':
-            if self.char() == '`':
+        while depth or string_parse or escape or self.char(num=False) != '|':
+            if self.char(num=False) == '`':
                 escape = not escape
 
             elif escape:
                 escape = False
 
-            elif self.char() in "'\"":
+            elif self.char(num=False) in "'\"":
                 string_parse = not string_parse
 
             elif not string_parse:
-                if self.char() in "FWQ":
+                if self.char(num=False) in "FWQ":
                     depth += 1
 
-                if self.char() == '|':
+                if self.char(num=False) == '|':
                     depth -= 1
 
             self.move()
-        self.move()
+
+            if self._pos == start_pos:
+                raise InvalidStateException("Missing | end")
         
     def read_char(self):
         if self._input_buffer is not None:
@@ -1030,7 +1055,7 @@ class Golfish():
                 self.output_as_char(elem)
 
         else:
-            self.output(chr(int(out)))
+            self.output(self.chr(out))
 
 
     def output_as_num(self, out):

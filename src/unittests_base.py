@@ -10,12 +10,12 @@ class TestGolfish(unittest.TestCase):
 
     def run_test(self, prog, output):
         if isinstance(prog, str):
-            gf = Golfish(prog, online=True)
+            gf = Golfish(prog, online=True, debug=True, tick_limit=10000)
         else:
-            gf = Golfish(*prog, online=True)
+            gf = Golfish(*prog, online=True, debug=True, tick_limit=10000)
 
         gf.run()
-        self.assertEqual(self.output(), str(output))   
+        self.assertEqual(self.output(), str(output))
 
     def output(self):
         val = sys.stdout.getvalue()
