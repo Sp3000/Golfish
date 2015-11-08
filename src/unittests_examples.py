@@ -137,5 +137,18 @@ class TestGolfishExamples(TestGolfish):
         self.run_test((code, "77"), "77\n49\n36\n18\n8\n")
         self.run_test((code, "806"), "806\n54\n20\n3\n")
 
+    def test_plus1_primes(self):
+        for a, b in [[4, 0], [1, 1], [17, 2], [33, 3], [553, 4], [3273, 5],
+                     [4145, 6], [4109, 7], [196869, 8]]:
+            self.run_test(("IW2SD$|l+1]FylS]LR}1lL-R}lMF2*+|:1gq~C::1pSP1]+y|uh", a), b)
+
+    def test_invert_binary(self):
+        self.run_test(("iE;1S^o", "10101110101010010100010001010110101001010"),
+                      "01010001010101101011101110101001010110101")
+
+    def test_longest_common_prefix(self):
+        pass
+
+    
 if __name__ == '__main__':
     unittest.main()
