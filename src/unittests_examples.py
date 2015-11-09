@@ -158,7 +158,10 @@ class TestGolfishExamples(TestGolfish):
         self.run_test((code, "^vvv^^vv^vv^v^^v"), -1)
         self.run_test((code, "^vvv^^vv^vv^v^^vv"), 0)
         self.run_test((code, "^vvv^^vv^vv^v^^vvv"), -1)
-        
+
+    def test_prime(self):
+        for i in range(30):
+            self.run_test(("I:2(q0h:3RF:L%zq0h|1h", i), int(is_probably_prime(i)))
 
     
 if __name__ == '__main__':

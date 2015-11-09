@@ -208,7 +208,7 @@ class TestGolfishInstructions(TestGolfish):
     def test_i(self):
         self.run_test(("ioioioio;", "Hello"), "Hell")
         self.run_test(("ioioioin;", "Hel"), "Hel-1")
-        self.run_test("in;", "-1")
+        self.run_test(("in;", ""), "-1")
 
     def test_j(self):
         pass

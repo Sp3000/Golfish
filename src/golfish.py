@@ -91,7 +91,7 @@ class IfBookmark(Bookmark):
 
 
 class Golfish():
-    def __init__(self, code="", input_="", debug=False, online=False, tick_limit=None):
+    def __init__(self, code="", input_=None, debug=False, online=False, tick_limit=None):
         rows = code.split("\n")
         self._board = defaultdict(lambda: defaultdict(int))
         x = y = 0
