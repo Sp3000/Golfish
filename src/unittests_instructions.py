@@ -179,6 +179,99 @@ class TestGolfishInstructions(TestGolfish):
 
     def test_W(self):
         pass
+
+    def test_X(self):
+        self.run_test("00Xh", 0**0)
+        self.run_test("50Xh", 5**0)
+        self.run_test("5fXh", 5**15)
+        self.run_test("312,Xh", 3**.5)
+
+    def test_Y(self):
+        pass
+
+    def test_Z(self):
+        self.run_test("10Zh~h", "1")
+        self.run_test("11Zh~h", "0")
+
+    def test_square_brackets(self):
+        self.run_test("12345D 3]D ++[D;", "[1 2 3 4 5]\n[3 4 5]\n[1 2 12]\n")
+
+    def test_backtick(self):
+        self.run_test("`'``a`a`b`HH", "Hba\n`'")
+
+    def test_g(self):
+        self.run_test("00go01gn20go;", "00g")
+
+    def test_h(self):
+        self.run_test("12345h", "5")
+
+    def test_i(self):
+        self.run_test(("ioioioio;", "Hello"), "Hell")
+        self.run_test(("ioioioin;", "Hel"), "Hel-1")
+        self.run_test("in;", "-1")
+
+    def test_j(self):
+        pass
+
+    def test_k(self):
+        pass
+
+    def test_l(self):
+        self.run_test("lDlDlD;", "[0]\n[0 1]\n[0 1 2]\n")
+
+    def test_m(self):
+        pass # See push_num
+
+    def test_n(self):
+        self.run_test("5n;", 5)
+        self.run_test("12,n;", 1/2)
+        self.run_test("37,n;", 3/7)
+        self.run_test("42,n;", 2)
+
+    def test_o(self):
+        self.run_test("48*o;", " ")
+
+    def test_p(self):
+        code = dedent("""\
+                      `v50p
+                           >fh""")
+        
+        self.run_test(code, "15")
+
+    def test_q(self):
+        pass
+
+    def test_r(self):
+        self.run_test("12345rD;", "[5 4 3 2 1]\n")
+
+    def test_s(self):
+        self.run_test("fsh", 31)
+        self.run_test("5" + "s"*10 + "h", 5 + 10*16)
+
+    def test_t(self):
+        pass # See Tt
+
+    def test_uy(self):
+        self.run_test("12345D yD uD;", "[1 2 3 4 5]\n[]\n[1 2 3 4 5]\n")
+
+    def test_w(self):
+        pass
+
+    def test_x(self):
+        pass
+
+    def test_y(self):
+        pass # See uy
+
+    def test_z(self):
+        self.run_test("5DzDzD;", "[5]\n[0]\n[1]\n")
+
+    def test_brace(self):
+        self.run_test("1234D{D{D}D}D;", "[1 2 3 4]\n[2 3 4 1]\n[3 4 1 2]"
+                                        "\n[2 3 4 1]\n[1 2 3 4]\n")
+
+    def test_tilde(self):
+        self.run_test("1234D~D~D~D;", "[1 2 3 4]\n[1 2 3]\n[1 2]\n[1]\n")
         
 if __name__ == '__main__':
     unittest.main()

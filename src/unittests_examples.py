@@ -149,6 +149,17 @@ class TestGolfishExamples(TestGolfish):
     def test_longest_common_prefix(self):
         pass
 
+    def vote_simulator(self):
+        code = "iEh`^=:@)+M"
+        self.run_test((code, ""), 0)
+        self.run_test((code, "^vvv^^vv^vv^v^"), 1)
+        self.run_test((code, "^vvv^^vv^vv^v^^"), 0)
+        self.run_test((code, "^vvv^^vv^vv^v^^^"), 1)
+        self.run_test((code, "^vvv^^vv^vv^v^^v"), -1)
+        self.run_test((code, "^vvv^^vv^vv^v^^vv"), 0)
+        self.run_test((code, "^vvv^^vv^vv^v^^vvv"), -1)
+        
+
     
 if __name__ == '__main__':
     unittest.main()
