@@ -38,7 +38,10 @@ class TestGolfishCore(TestGolfish):
         self.run_test("0Q56S||h", "0")
 
     def test_var_block(self):
-        self.run_test("5V'0Q'|h'|5h", "0")
+        self.run_test("5V'0Q'|h'|3h", "5")
+
+    def test_alias_block(self):
+        self.run_test("5A'0Q'|h'|5h", "0")
 
 if __name__ == '__main__':
     unittest.main()

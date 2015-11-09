@@ -979,27 +979,31 @@ class Golfish():
         switched = False
         depth = 0
 
-        while depth or string_parse or escape or switched or self.char(num=False) != '|':            
+        while depth or string_parse or escape or switched or self.char(num=False) != '|':
+            c = self.char(num=False)
+            
             if switched:
                 switched = False
 
-            elif self.char(num=False) == '`':
+            elif c == '`':
                 escape = not escape
 
             elif escape:
                 escape = False
 
-            elif self.char(num=False) in "'\"":
+            elif (c in "'\"" and c not in self._variable_map and
+                  c not in self._function_alias_map):
+
                 string_parse = not string_parse
 
             elif not string_parse:
-                if self.char(num=False) in "FWQ":
+                if c in "FWQ":
                     depth += 1
 
-                elif self.char(num=False) == '|':
+                elif c == '|':
                     depth -= 1
 
-                elif self.char(num=False) == 'S':
+                elif c == 'S':
                     switched = True
 
             self.move()
