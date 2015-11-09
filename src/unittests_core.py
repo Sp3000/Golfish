@@ -43,5 +43,8 @@ class TestGolfishCore(TestGolfish):
     def test_alias_block(self):
         self.run_test("5A'0Q'|h'|5h", "0")
 
+    def test_QL(self):
+        self.run_test("5F1QL||D;", "[0 1 2 3 4]\n")
+
 if __name__ == '__main__':
     unittest.main()

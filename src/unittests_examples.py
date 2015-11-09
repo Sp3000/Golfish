@@ -163,6 +163,19 @@ class TestGolfishExamples(TestGolfish):
         for i in range(30):
             self.run_test(("I:2(q0h:3RF:L%zq0h|1h", i), int(is_probably_prime(i)))
 
-    
+    def test_biplex(self):
+        code = dedent("""\
+                      IEvW2SD$|~rlFLmg+Lmp|
+                      |h>3F`dFLmg|u|ylRS>[&lF:q}C~|lMRS<&[jjlF2k=&=&S|}|lMF2*+""")
+
+        for a, b in [[[1], 1], [[2], 2], [[1, 2, 5], 7], [[4294967295], 4294967295],
+                     [[2454267026, 2863311530, 3681400539], 3817748707],
+                     [[2341103945, 2969112506, 1849078949, 1430639189], 3]]:
+
+            self.run_test((code, a), b)
+
+    def test_reverse_and_invert(self):
+        self.run_test(("iE;W2SDz$|~rlMF2*+|o", "Hello, World!"), "v,dd\x042>\n\4Xdl\x1e")
+
 if __name__ == '__main__':
     unittest.main()
