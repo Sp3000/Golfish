@@ -178,7 +178,8 @@ class TestGolfishInstructions(TestGolfish):
         self.run_test("VVVVVD;", "[0 0 0 0]\n")
 
     def test_W(self):
-        pass
+        
+        self.run_test("W|D;", "[0]\n")
 
     def test_X(self):
         self.run_test("00Xh", 0**0)

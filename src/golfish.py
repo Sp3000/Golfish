@@ -604,12 +604,11 @@ class Golfish():
                 self._bookmark_stack.append(bookmark)
                 self._closure_stack = []
 
-            if self._bookmark_stack[-1].w_marker:
-                checker = self.pop
-            else:
-                checker = self.peek
+            elem = self.pop()
+            if not self._bookmark_stack[-1].w_marker:
+                self.push(elem)
             
-            if not checker():
+            if not elem:
                 self.bookmark_break()
             else:
                 self._curr_stack.extend(self._bookmark_stack[-1].closure_stack)
@@ -927,14 +926,6 @@ class Golfish():
                 return self._curr_stack.pop()
             else:
                 return self._curr_stack.pop(index)
-
-        else:
-            return 0
-
-
-    def peek(self):
-        if self._curr_stack:
-            return self._curr_stack[-1]
 
         else:
             return 0
