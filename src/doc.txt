@@ -37,9 +37,11 @@ S3    3.14            Push pi
 :                     Duplicate
 ;                     Halt with no output
 <                     Move left
+S<                    Min of two elements
 =                     Equals
 S=                    Round
 >                     Move right
+S>                    Max of two elements
 ?                     Conditional: pop and execute next if truthy, else skip 1
 @                     Rotate 3, moving 3rd down to top
 A     alias           Pops y and saves [-1, y] as the start of a function, direction east. Function name is determined by next char. Use B to break/return from function.

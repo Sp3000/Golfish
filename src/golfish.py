@@ -827,9 +827,21 @@ class Golfish():
         elif instruction == '3':
             self.push(math.pi)
 
+        elif instruction == '<':
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            self.push(min(elem1, elem2))
+
         elif instruction == '=':
             elem = self.pop()
             self.push(round(elem))
+
+        elif instruction == '>':
+            elem2 = self.pop()
+            elem1 = self.pop()
+
+            self.push(max(elem1, elem2))
 
         elif instruction == 'A':
             elem = self.pop()
@@ -980,6 +992,7 @@ class Golfish():
         depth = 0
 
         while depth or string_parse or escape or switched or self.char(num=False) != '|':
+            # Need to check VA for everything here
             c = self.char(num=False)
             
             if switched:

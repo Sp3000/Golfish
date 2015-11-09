@@ -84,7 +84,7 @@ class TestGolfishExamples(TestGolfish):
         for i in range(1, 101):
             o += (("Fizz"*(i%3<1) + "Buzz"*(i%5<1)) or str(i)) + '\n'
 
-        self.run_test('`e2RFL3%zR"zziF"L5%zR"zzuB"lQlRoaoC|LN|;', o)
+        self.run_test('`e2RFL5%zR"zzuB"L3%zR"zziF"lQlRoaoC|LN|;', o)
 
     def test_2spooky(self):
         for i in range(10):
