@@ -116,32 +116,30 @@ class Golfish():
         self._stack_num = 0
         self._register_tape = defaultdict(lambda:None)
 
+        self._input = input_
+        self._debug = debug
+        self._online = online
+        
         self._input_buffer = None
 
         self._toggled = False # S
         self._skip = 0 # ?! and more
 
-        self._bookmark_pos = [-1, 0] # tT, not the same as while/for bookmarks
-        self._bookmark_dir = DIRECTIONS[">"]
+        self._teleport_pos = [-1, 0] # tT
+        self._teleport_dir = DIRECTIONS[">"]
 
-        self._variable_map = {}
-        self._function_alias_map = {}
+        self._variable_map = {} # V
+        self._function_alias_map = {} # A
 
-        self._input = input_
-        self._debug = debug
+        self._R_repeat = 1 # R
 
-        self._online = online
-
-        self._R_repeat = 1
-
-        self._bookmark_stack = []
+        self._bookmark_stack = [] # AFQW
         self._marker_stack = []
+        self._last_loop_counter = 0 # L
 
-        self._eof = False
+        self._eof = False # E
 
-        self._last_loop_counter = 0
-
-        self._closure_stack = []
+        self._closure_stack = [] # j
 
     def run(self):        
         try:
@@ -576,8 +574,8 @@ class Golfish():
             raise InvalidStateException # Shouldn't reach here
 
         elif instruction == 'T':
-            self._bookmark_pos = self._pos[:]
-            self._bookmark_dir = self._dir[:]
+            self._teleport_pos = self._pos[:]
+            self._teleport_dir = self._dir[:]
 
         elif instruction == 'V':
             self.move()
@@ -720,8 +718,8 @@ class Golfish():
             self.push(elem + 16)
 
         elif instruction == 't':
-            self._pos = self._bookmark_pos[:]
-            self._dir = self._bookmark_dir[:]
+            self._pos = self._teleport_pos[:]
+            self._dir = self._teleport_dir[:]
 
         elif instruction == 'u':
             self.stack_right()
@@ -978,10 +976,14 @@ class Golfish():
         
         string_parse = False
         escape = False
+        switched = False
         depth = 0
 
-        while depth or string_parse or escape or self.char(num=False) != '|':
-            if self.char(num=False) == '`':
+        while depth or string_parse or escape or switched or self.char(num=False) != '|':            
+            if switched:
+                switched = False
+
+            elif self.char(num=False) == '`':
                 escape = not escape
 
             elif escape:
@@ -994,8 +996,11 @@ class Golfish():
                 if self.char(num=False) in "FWQ":
                     depth += 1
 
-                if self.char(num=False) == '|':
+                elif self.char(num=False) == '|':
                     depth -= 1
+
+                elif self.char(num=False) == 'S':
+                    switched = True
 
             self.move()
 

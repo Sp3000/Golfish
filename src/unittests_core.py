@@ -34,5 +34,11 @@ class TestGolfishCore(TestGolfish):
         self.run_test(("INE;IN;", "5 "), "5\n-1\n")
         self.run_test(("INE;IN;", "5 6"), "5\n6\n")
 
+    def test_switched_block(self):
+        self.run_test("0Q56S||h", "0")
+
+    def test_var_block(self):
+        self.run_test("5V'0Q'|h'|5h", "0")
+
 if __name__ == '__main__':
     unittest.main()
