@@ -102,6 +102,7 @@ class TestGolfishInstructions(TestGolfish):
         self.run_test("D0D1D2D~D;", "[]\n[0]\n[0 1]\n[0 1 2]\n[0 1]\n")
         self.run_test("0?D2D;", "[2]\n")
         self.run_test("1?D2D;", "[]\n[2]\n")
+        self.run_test("1nD;", "1\n[]\n")
 
     def test_E(self):
         self.run_test(("iEH", "Hello, World!"), "!dlroW ,olleH")

@@ -121,6 +121,7 @@ class Golfish():
         self._online = online
         
         self._input_buffer = None
+        self._last_output = ''
 
         self._toggled = False # S
         self._skip = 0 # ?! and more
@@ -151,48 +152,24 @@ class Golfish():
         
         except KeyboardInterrupt as e:    
             print("^C", file=sys.stderr)
-
-            if self._debug:
-                if self._online:
-                    traceback.print_exc(file=sys.stdout)
-                else:
-                    raise e
+            self.traceback(e)
 
         except TimeoutError as e:
-            print("[Timeout]", file=sys.stderr)
-
-            if self._debug:
-                if self._online:
-                    traceback.print_exc(file=sys.stdout)
-                else:
-                    raise e
+            self.print_error("[Timeout]")
+            self.traceback(e)
 
         except Exception as e:
             pos = self._pos
             char = self._board[pos[1]][pos[0]]
 
-            # Can't assign file = stdout if online else stderr for some reason
-            if self._online:
-                print("something smells fishy... ", end="")
+            self.print_error("something smells fishy... ", end="")
 
-                if char in range(32, 127):
-                    print("(instruction {} '{}' at {},{})".format(char, "S"*self._toggled + chr(char), pos[0], pos[1]))
-                else:
-                    print("(instruction {} at {},{})".format(char, pos[0], pos[1]))
-                    
+            if char in range(32, 127):
+                self.print_error("(instruction {} '{}' at {},{})".format(char, "S"*self._toggled + chr(char), pos[0], pos[1]))
             else:
-                print("something smells fishy... ", end="", file=sys.stderr)
-                
-                if char in range(32, 127):
-                    print("(instruction {} '{}' at {},{})".format(char, "S"*self._toggled + chr(char), pos[0], pos[1]), file=sys.stderr)
-                else:
-                    print("(instruction {} at {},{})".format(char, pos[0], pos[1]), file=sys.stderr)       
+                self.print_error("(instruction {} at {},{})".format(char, pos[0], pos[1]))
 
-            if self._debug:
-                if self._online:
-                    traceback.print_exc(file=sys.stdout)
-                else:
-                    raise e
+            self.traceback(e)
 
 
     def tick(self):
@@ -457,6 +434,9 @@ class Golfish():
                 raise InvalidStateException("Continue from non-loop")
 
         elif instruction == 'D':
+            if self._last_output not in "\n\r":
+                self.output('\n')
+
             self.output(str(self._curr_stack).replace(',', '') + '\n')
 
         elif instruction == 'E':
@@ -1053,6 +1033,9 @@ class Golfish():
                 return EOF
 
     def output(self, out):
+        if out:
+            self._last_output = out[-1]
+
         sys.stdout.write(out)
         sys.stdout.flush()
             
@@ -1080,6 +1063,22 @@ class Golfish():
 
     def halt(self):
         raise HaltProgram
+
+
+    def print_error(self, *objects, end=""):
+        if self._online:
+            print(*objects, end=end)
+        else:
+            print(*objects, end=end, file=sys.stderr)
+
+
+    def traceback(self, e):
+        if self._debug:
+            if self._online:
+                traceback.print_exc(file=sys.stdout)
+            else:
+                raise e
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
