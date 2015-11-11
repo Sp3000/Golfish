@@ -156,7 +156,7 @@ class Golfish():
 
         except TimeoutError as e:
             if self._last_output not in "\n\r":
-                self._print_error('\n', end='')
+                self.print_error('\n', end='')
                 
             self.print_error("[Timeout]")
             self.traceback(e)
