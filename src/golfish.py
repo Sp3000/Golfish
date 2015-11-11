@@ -121,7 +121,7 @@ class Golfish():
         self._online = online
         
         self._input_buffer = None
-        self._last_output = ''
+        self._last_output = '\n'
 
         self._toggled = False # S
         self._skip = 0 # ?! and more
@@ -155,6 +155,9 @@ class Golfish():
             self.traceback(e)
 
         except TimeoutError as e:
+            if self._last_output not in "\n\r":
+                self._print_error('\n', end='')
+                
             self.print_error("[Timeout]")
             self.traceback(e)
 
