@@ -3,7 +3,7 @@ Gol><>, the slightly golfier version of ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.4.2 (updated 11 Nov 2015)
+Version: 0.4.1 (updated 11 Nov 2015)
 """
 
 import argparse
@@ -1068,7 +1068,6 @@ class Golfish():
 
 
     def halt(self):
-        print(self._ticks)
         raise HaltProgram
 
 
