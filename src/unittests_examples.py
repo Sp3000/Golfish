@@ -147,7 +147,13 @@ class TestGolfishExamples(TestGolfish):
                       "01010001010101101011101110101001010110101")
 
     def test_longest_common_prefix(self):
-        pass
+        code = dedent("""\
+                      i:a=q~v
+                      E;=Z;o>{:i""")
+
+        self.run_test((code, "global\nglossary"), "glo")
+        self.run_test((code, "department\ndepart"), "depart")
+        self.run_test((code, "glove\ndove"), "")
 
     def vote_simulator(self):
         code = "iEh`^=:@)+M"
@@ -161,7 +167,9 @@ class TestGolfishExamples(TestGolfish):
 
     def test_prime(self):
         for i in range(30):
-            self.run_test(("I:2(q0h:3RF:L%zq0h|1h", i), int(is_probably_prime(i)))
+            expected = int(is_probably_prime(i))
+            self.run_test(("I:2(q0h:3RF:L%zq0h|1h", i), expected)
+            self.run_test(("1IRl:&MR*:*&%h", i), expected)
 
     def test_biplex(self):
         code = dedent("""\
@@ -176,6 +184,9 @@ class TestGolfishExamples(TestGolfish):
 
     def test_reverse_and_invert(self):
         self.run_test(("iE;W2SDz$|~rlMF2*+|o", "Hello, World!"), "v,dd\x042>\n\4Xdl\x1e")
+
+    def test_replace_semicolons(self):
+        self.run_test(("iE;:`;=zQot|~`.o", "abc; de;fg;"), "abc. de.fg.")
 
 if __name__ == '__main__':
     unittest.main()

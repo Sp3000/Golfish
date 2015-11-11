@@ -3,7 +3,7 @@ Gol><>, the slightly golfier version of ><>
 
 Requires Python 3 (tested on Python 3.4.2)
 
-Version: 0.4.1 (updated 9 Nov 2015)
+Version: 0.4.1 (updated 11 Nov 2015)
 """
 
 import argparse
@@ -554,17 +554,13 @@ class Golfish():
             self.push(elem + 1)
 
         elif instruction == 'Q':
-            if self._bookmark_stack and self._bookmark_stack[-1].pos == self.pos_before():
-                self.bookmark_break()
-                
-            else:
-                cond = self.pop()
+            cond = self.pop()
 
-                if cond:
-                    bookmark = IfBookmark(self.pos_before(), self._dir[:])
-                    self._bookmark_stack.append(bookmark)
-                else:
-                    self.to_block_end()
+            if cond:
+                bookmark = IfBookmark(self.pos_before(), self._dir[:])
+                self._bookmark_stack.append(bookmark)
+            else:
+                self.to_block_end()
 
         elif instruction == 'R':
             elem = self.pop()
