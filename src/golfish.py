@@ -1068,7 +1068,6 @@ class Golfish():
 
 
     def halt(self):
-        print(self._ticks)
         raise HaltProgram
 
 
