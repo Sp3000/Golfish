@@ -188,5 +188,16 @@ class TestGolfishExamples(TestGolfish):
     def test_replace_semicolons(self):
         self.run_test(("iE;:`;=zQot|~`.o", "abc; de;fg;"), "abc. de.fg.")
 
+    def test_replace_semicolons2(self):
+        code = dedent("""\
+                      iEv:`;=zQoPt|~`.o:c$mpP
+                      |;>aoF` Lmg+o""")
+
+        self.run_test((code, "ab;cd ef;ghi;"), "ab.cd ef.ghi.\n  ,     ,   ,")
+
+    def test_transpose(self):
+        code = "22WiEB:a=Q{~~2$PC|3K~p{P}|~~22W2Kg:QoPC|ao~~P22KgZ;|;"
+        self.run_test((code, "abc\ndef\nghi\n"), "adg\nbeh\ncfi\n")
+
 if __name__ == '__main__':
     unittest.main()
