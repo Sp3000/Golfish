@@ -116,9 +116,14 @@ class Golfish():
 
             self.print_error("something smells fishy... ", end='')
 
+            instruction = 'S'*self._toggled
+            prev_char = self.chr(self._board[self.pos_before()])
+
+            instruction += prev_char * (prev_char in "T")
+            instruction += self.chr(char)
+
             if char in range(32, 127):
-                self.print_error("(instruction {} '{}' at {},{})".format(
-                                 char, "S"*self._toggled + chr(char), *self._pos))
+                self.print_error("(instruction {} '{}' at {},{})".format(char, instruction, *self._pos))
             else:
                 self.print_error("(instruction {} at {},{})".format(char, *self._pos))
 
