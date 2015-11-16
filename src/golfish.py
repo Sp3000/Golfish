@@ -817,11 +817,12 @@ class Golfish():
             self.push(ord(elem.lower()))
 
         elif instruction == 'n':
-            places = self.pop()
+            places = int(self.pop())
             num = self.pop()
 
             try:
-                self.output(str(evalf.N(num, places)))
+                new_places = int(lib.floor(lib.log(num, 10)) + places + 1)
+                self.output(str(evalf.N(num, new_places, maxn=max(100, 5*new_places))))
             except NameError:
                 self.output("{{:.{}f}}".format(places).format(float(num)))
 
