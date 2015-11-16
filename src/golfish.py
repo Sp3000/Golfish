@@ -909,7 +909,8 @@ class Golfish():
             c = self.chr(self.char())
             
             if switched:
-                switched = False
+                switched = False                
+                string_parse = c in "'\""
 
             elif c == '`':
                 escape = not escape
