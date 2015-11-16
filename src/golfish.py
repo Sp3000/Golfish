@@ -27,10 +27,10 @@ except ImportError:
 
 try:
     # If you have sympy installed, use that instead
-    from sympy import sympify
+    from sympy import sympify, evalf
 
 except ImportError:
-    # Otherwise, make sympify a no-op
+    # Otherwise, make custom versions
     sympify = lambda x: x
 
 DIGITS = "0123456789abcdef"
@@ -819,7 +819,11 @@ class Golfish():
         elif instruction == 'n':
             places = self.pop()
             num = self.pop()
-            self.output("{{:.{}f}}".format(places).format(float(num)))
+
+            try:
+                self.output(str(evalf.N(num, places)))
+            except NameError:
+                self.output("{{:.{}f}}".format(places).format(float(num)))
 
         elif instruction == 'u':
             elem = self.chr(self.pop())
