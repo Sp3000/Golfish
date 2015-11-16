@@ -777,17 +777,23 @@ class Golfish():
             self.move()
             char = self.chr(self.char())
 
-            funcs = {'S': lib.asin,
-                     'C': lib.acos,
-                     'T': lib.atan,
-                     '2': lib.atan2,
-                     's': lib.sin,
-                     'c': lib.cos,
-                     't': lib.tan}
+            if char == '2':
+                elem2 = self.pop()
+                elem1 = self.pop()
+
+                self.push(lib.atan2(elem1, elem2))
+
+            else:
+                funcs = {'S': lib.asin,
+                         'C': lib.acos,
+                         'T': lib.atan,
+                         's': lib.sin,
+                         'c': lib.cos,
+                         't': lib.tan}
 
 
-            elem = self.pop()
-            self.push(funcs[char](elem))
+                elem = self.pop()
+                self.push(funcs[char](elem))
 
         elif instruction == ']': 
             n = self.pop()

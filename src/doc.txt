@@ -63,9 +63,8 @@ R     repeat          Pop n, repeat next instruction n times (experimental)
 S     switch          Toggle functionality of next instruction
 T     teleport-pad    Set teleport pad, saving pos/dir
 ST    trig            Three-char operator trig library:
-                        STS/STC/STT:  asin/acos/atan
-                        STs/STc/STt:  sin/cos/tan
-                        ST2:          atan2
+                        STS/STC/STT/ST2:  asin/acos/atan/atan2
+                        STs/STc/STt:      sin/cos/tan
 U                      
 V     var             Pops element and re-pushes it. Saves element to variable with name determined by next char (don't pick L).
 W     while           While loop. Peeks at top for falsy value. Saves pos/dir. Moves to after matching | on same row on completion. Modifiable with w instruction.
