@@ -62,7 +62,10 @@ Q     qmark-any       Conditional: pop and execute next if truth, else skip to m
 R     repeat          Pop n, repeat next instruction n times (experimental)
 S     switch          Toggle functionality of next instruction
 T     teleport-pad    Set teleport pad, saving pos/dir
-ST    trig            Trig library: pop k, n and push application of k-th function from [sin, cos, tan, sinh, cosh, tanh, asin, acos, atan, asinh, acosh, atanh, atan2] to n.
+ST    trig            Three-char operator trig library:
+                        STS/STC/STT:  asin/acos/atan
+                        STs/STc/STt:  sin/cos/tan
+                        ST2:          atan2
 U                      
 V     var             Pops element and re-pushes it. Saves element to variable with name determined by next char (don't pick L).
 W     while           While loop. Peeks at top for falsy value. Saves pos/dir. Moves to after matching | on same row on completion. Modifiable with w instruction.

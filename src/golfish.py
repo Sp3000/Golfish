@@ -543,20 +543,8 @@ class Golfish():
         elif instruction == 'X':
             elem2 = self.pop()
             elem1 = self.pop()
-            result = elem1**elem2
-
-            valid = not isinstance(result, complex)
-
-            try:
-                if result.is_imaginary:
-                    valid = False
-            except:
-                pass
-
-            if not valid:
-                raise InvalidStateException("Computation resulted in a complex number")
             
-            self.push(result)
+            self.push(elem1**elem2)
 
         elif instruction == 'Z':
             condition = self.pop()
@@ -786,12 +774,20 @@ class Golfish():
             self.push(1 if lib.is_probably_prime(elem) else 0)
 
         elif instruction == 'T':
-            func_num = self.pop()
-            functions = [lib.sin, lib.cos, lib.tan, lib.sinh, lib.cosh, lib.tanh,
-                         lib.asin, lib.acos, lib.atan, lib.asinh, lib.acosh, lib.atanh, lib.atan2]
+            self.move()
+            char = self.chr(self.char())
+
+            funcs = {'S': lib.asin,
+                     'C': lib.acos,
+                     'T': lib.atan,
+                     '2': lib.atan2,
+                     's': lib.sin,
+                     'c': lib.cos,
+                     't': lib.tan}
+
 
             elem = self.pop()
-            self.push(functions[func_num % len(functions)](elem))
+            self.push(funcs[char](elem))
 
         elif instruction == ']': 
             n = self.pop()
@@ -830,7 +826,20 @@ class Golfish():
 
 
     def push(self, elem):
-        self._curr_stack.append(sympify(elem))
+        elem = sympify(elem)
+
+        valid = not isinstance(elem, complex)
+
+        try:
+            if elem.is_imaginary:
+                valid = False
+        except:
+            pass
+
+        if not valid:
+            raise InvalidStateException("Computation resulted in a complex number")
+            
+        self._curr_stack.append(elem)
 
 
     def pop(self):
