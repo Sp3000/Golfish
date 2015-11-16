@@ -1,34 +1,37 @@
 """
 Gol><>, the slightly golfier version of ><>
 
-Requires Python 3 (tested on Python 3.4.2)
+Requires Python 3 (tested on Python 3.4.3)
 
-Version: 0.4.2 (updated 11 Nov 2015)
+Version: 0.4.2 (updated 16 Nov 2015)
 """
 
 import argparse
 import codecs
 from collections import defaultdict, namedtuple
+import math
+import random
 import sys
+import traceback
 
 try:
     from getch import _Getch
     getch = _Getch()
-except ImportError:
-    # Fail silently, for online interpreter
-    pass
+    from library import *
+    from structures import *
 
-from fractions import gcd
-from functools import reduce
-import math
-import operator
-import random
-import traceback
+except ImportError:
+    # For online interpreter
+    from .library import *
+    from .structures import *
 
 try:
-    from library import *
+    # Python 3.5 onwards
+    from math import gcd
+
 except ImportError:
-    from .library import *
+    from fractions import gcd
+
 
 DIGITS = "0123456789abcdef"
 
@@ -44,66 +47,9 @@ MIRRORS = {'/': lambda x,y: [-y, -x],
 EOF = -1
 
 
-class HaltProgram(Exception):
-    pass
-
-
-class InvalidStateException(Exception):
-    pass
-
-
-class Bookmark():
-    def __init__(self, pos, dir_, closure_stack):
-        self.pos = pos
-        self.dir = dir_
-        self.closure_stack = closure_stack
-
-
-class LoopBookmark(Bookmark):
-    def __init__(self, pos, dir_, closure_stack):
-        super().__init__(pos, dir_, closure_stack)
-        self.counter = 0
-
-    def increment_counter(self):
-        self.counter += 1
-
-
-class WhileBookmark(LoopBookmark):
-     def __init__(self, pos, dir_, closure_stack, w_marker=None):
-         super().__init__(pos, dir_, closure_stack)
-         self.w_marker = w_marker
-
-
-class ForBookmark(LoopBookmark):
-    def __init__(self, pos, dir_, closure_stack, limit):
-        super().__init__(pos, dir_, closure_stack)
-        self.limit = limit
-
-
-class FunctionBookmark(Bookmark):
-    def __init__(self, pos, dir_, closure_stack):
-        super().__init__(pos, dir_, closure_stack)
-
-
-class IfBookmark(Bookmark):
-    def __init__(self, pos, dir_):
-        super().__init__(pos, dir_, None)
-
-
 class Golfish():
     def __init__(self, code="", input_=None, debug=False, online=False, tick_limit=None):
-        rows = code.split("\n")
-        self._board = defaultdict(lambda: defaultdict(int))
-        x = y = 0
-
-        for char in code:
-            if char == "\n":
-                y += 1
-                x = 0
-
-            else:
-                self._board[y][x] = ord(char)
-                x += 1
+        self._board = CodeBoard(code)
 
         self._pos = [-1, 0] # [x, y]
         self._dir = DIRECTIONS[">"]
@@ -111,7 +57,7 @@ class Golfish():
         self._ticks = 0
         self._tick_limit = tick_limit
 
-        self._stack_tape = defaultdict(list)
+        self._stack_tape = defaultdict(BottomlessStack)
         self._curr_stack = self._stack_tape[0]
         self._stack_num = 0
         self._register_tape = defaultdict(lambda:None)
@@ -162,8 +108,7 @@ class Golfish():
             self.traceback(e)
 
         except Exception as e:
-            pos = self._pos
-            char = self._board[pos[1]][pos[0]]
+            char = self._board[self._pos]
 
             if self._last_output not in "\n\r":
                 self.print_error('\n', end='')
@@ -181,8 +126,8 @@ class Golfish():
     def tick(self):
         self.move()
 
-        if self._pos[1] in self._board and self._pos[0] in self._board[self._pos[1]]:
-            self.handle_instruction(self._board[self._pos[1]][self._pos[0]])
+        if self._pos in self._board:
+            self.handle_instruction(self._board[self._pos])
 
         self._ticks += 1
 
@@ -196,18 +141,18 @@ class Golfish():
         self._pos[1] = int(self._pos[1]) + self._dir[1]
 
         # Wrap around
-        if self._pos[1] in self._board:
-            if self._dir == DIRECTIONS['>'] and self._pos[0] > max(self._board[self._pos[1]].keys()):
+        if self._board.has_y(self._pos[1]):
+            if self._dir == DIRECTIONS['>'] and self._pos[0] > self._board.max_x(self._pos[1]):
                 self._pos[0] = 0
 
             elif self._dir == DIRECTIONS['<'] and self._pos[0] < 0:
-                self._pos[0] = max(self._board[self._pos[1]].keys())
+                self._pos[0] = self._board.max_x(self._pos[1])
 
-        elif self._dir == DIRECTIONS['v'] and self._pos[1] > max(self._board.keys()):
+        elif self._dir == DIRECTIONS['v'] and self._pos[1] > self._board.max_y():
             self._pos[1] = 0
         
         elif self._dir == DIRECTIONS['^'] and self._pos[1] < 0:
-            self._pos[1] = max(self._board.keys())
+            self._pos[1] = self._board.max_y()
 
 
     def pos_before(self):
@@ -248,7 +193,7 @@ class Golfish():
             else:
                 # Special cases for 0R
                 if instruction in "'\"`":
-                    tmp_stack = self._curr_stack[:]
+                    tmp_stack = self._curr_stack.copy()
                     self.handle_normal_instruction(instruction)
                     self._curr_stack = tmp_stack
 
@@ -289,7 +234,7 @@ class Golfish():
             parse_buffer = []
 
             self.move()
-            char = self._board[self._pos[1]][self._pos[0]]
+            char = self._board[self._pos]
             
             while escaped or char != parse_char:
                 if escaped:
@@ -312,7 +257,7 @@ class Golfish():
                         parse_buffer.append(char)
 
                 self.move()
-                char = self._board[self._pos[1]][self._pos[0]]
+                char = self._board[self._pos]
 
             self._curr_stack.extend(parse_buffer)
 
@@ -635,10 +580,7 @@ class Golfish():
             y = self.pop()
             x = self.pop()
 
-            if y in self._board and x in self._board[y]:
-                self.push(self._board[y][x])
-            else:
-                self.push(0)
+            self.push(self._board[x, y])
 
         elif instruction == 'h':
             self.output_as_num(self.pop())
@@ -677,14 +619,11 @@ class Golfish():
             self.output_as_char(self.pop())
 
         elif instruction == 'p':
-            elem3 = self.pop()
-            elem2 = self.pop()
-            elem1 = self.pop()
+            y = self.pop()
+            x = self.pop()
+            char = self.pop()
 
-            y = elem3
-            x = elem2
-            char = elem1
-            self._board[y][x] = char                  
+            self._board[x, y] = char                  
                     
         elif instruction == 'q':
             cond = self.pop()
@@ -753,7 +692,7 @@ class Golfish():
             escaped = False
             parse_char = ord(instruction)
             self.move()
-            char = self._board[self._pos[1]][self._pos[0]]
+            char = self._board[self._pos]
             
             while escaped or char != parse_char:
                 if escaped:
@@ -775,7 +714,7 @@ class Golfish():
                         self.output_as_char(char)
 
                 self.move()
-                char = self._board[self._pos[1]][self._pos[0]]
+                char = self._board[self._pos]
         
         elif instruction == '%':
             elem2 = self.pop()
@@ -802,6 +741,9 @@ class Golfish():
             elem1 = self.pop()
 
             self.push(int(elem1 // elem2))
+
+        elif instruction == '1':
+            self.push((1+5**.5)/2)
 
         elif instruction == '2':
             self.push(math.e)
@@ -902,45 +844,32 @@ class Golfish():
             raise NotImplementedError
 
 
-    def push(self, elem, index=None):
-        if elem == int(elem):
-            elem = int(elem)
-
-        if index is None:
-            self._curr_stack.append(elem)
-        else:
-            self._curr_stack.insert(index, elem)
+    def push(self, elem):
+        self._curr_stack.append(elem)
 
 
-    def pop(self, index=None):
-        if self._curr_stack:
-            if index is None:
-                return self._curr_stack.pop()
-            else:
-                return self._curr_stack.pop(index)
+    def pop(self):
+        return self._curr_stack.pop()
 
-        else:
-            return 0
+
+    def rotate_left(self):
+        self._curr_stack.rotate_left()
+
+
+    def rotate_right(self):
+        self._curr_stack.rotate_right()
 
 
     def char(self, num=True):
         if num:
-            return self._board[self._pos[1]][self._pos[0]]
+            return self._board[self._pos]
         else:
-            return self.chr(self._board[self._pos[1]][self._pos[0]])
+            return self.chr(self._board[self._pos])
 
 
     def chr(self, elem):
         return chr(int(elem))
-
-
-    def rotate_left(self):
-        self.push(self.pop(index=0))
-
-
-    def rotate_right(self):
-        self.push(self.pop(), index=0)
-
+    
 
     def stack_left(self):
         self._stack_num -= 1
