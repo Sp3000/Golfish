@@ -25,6 +25,14 @@ except ImportError:
     from .library import *
     from .structures import *
 
+try:
+    # If you have sympy installed, use that instead
+    from sympy import sympify
+
+except ImportError:
+    # Otherwise, make sympify a no-op
+    sympify = lambda x: x
+
 DIGITS = "0123456789abcdef"
 
 DIRECTIONS = {'^': [0, -1],
@@ -101,7 +109,7 @@ class Golfish():
             self.traceback(e)
 
         except Exception as e:
-            char = self._board[self._pos]
+            char = self.char()
 
             if self._last_output not in "\n\r":
                 self.print_error('\n', end='')
@@ -154,9 +162,9 @@ class Golfish():
     
 
     def handle_instruction(self, char):
-        instruction = chr(char)
+        instruction = self.chr(char)
 
-        if instruction == "S" and not self._toggled:
+        if instruction == 'S' and not self._toggled:
             self._toggled = True
             return
 
@@ -228,8 +236,8 @@ class Golfish():
             parse_buffer = []
 
             self.move()
-            char = self._board[self._pos]
-            
+            char = self.char()
+
             while escaped or char != parse_char:
                 if escaped:
                     escapes = {ord(a): ord(b) for a,b in zip("`nr","`\n\r")}
@@ -251,7 +259,7 @@ class Golfish():
                         parse_buffer.append(char)
 
                 self.move()
-                char = self._board[self._pos]
+                char = self.char()
 
             self._curr_stack.extend(parse_buffer)
 
@@ -345,7 +353,7 @@ class Golfish():
 
         elif instruction == 'A':
             self.move()
-            char = self.char(num=False)
+            char = self.chr(self.char())
 
             y = self.pop()
             self._function_alias_map[char] = [y, self._closure_stack]
@@ -500,7 +508,7 @@ class Golfish():
 
         elif instruction == 'V':
             self.move()
-            char = self.char(num=False)
+            char = self.chr(self.char())
 
             elem = self.pop()
             self.push(elem)
@@ -535,9 +543,17 @@ class Golfish():
         elif instruction == 'X':
             elem2 = self.pop()
             elem1 = self.pop()
-            result = elem1 ** elem2
+            result = elem1**elem2
 
-            if isinstance(result, complex):
+            valid = not isinstance(result, complex)
+
+            try:
+                if result.is_imaginary:
+                    valid = False
+            except:
+                pass
+
+            if not valid:
                 raise InvalidStateException("Computation resulted in a complex number")
             
             self.push(result)
@@ -584,7 +600,7 @@ class Golfish():
             self._closure_stack.append(elem)
 
         elif instruction == 'k':
-            elem = self.pop()
+            elem = int(self.pop())
 
             if self._curr_stack:
                 self.push(self._curr_stack[~elem % len(self._curr_stack)])
@@ -677,7 +693,7 @@ class Golfish():
             escaped = False
             parse_char = ord(instruction)
             self.move()
-            char = self._board[self._pos]
+            char = self.char()
             
             while escaped or char != parse_char:
                 if escaped:
@@ -708,8 +724,8 @@ class Golfish():
             self.push(lib.gcd(elem1, elem2))
 
         elif instruction == '&':
-            elem2 = self.pop()
-            elem1 = self.pop()
+            elem2 = int(self.pop())
+            elem1 = int(self.pop())
 
             self.push(elem1 & elem2)
 
@@ -782,8 +798,8 @@ class Golfish():
             self._curr_stack = self._stack_tape.move_right(n, copy=True)
 
         elif instruction == '^':
-            elem2 = self.pop()
-            elem1 = self.pop()
+            elem2 = int(self.pop())
+            elem1 = int(self.pop())
 
             self.push(elem1 ^ elem2)
 
@@ -804,8 +820,8 @@ class Golfish():
             self.push(random.random())
 
         elif instruction == '|':
-            elem2 = self.pop()
-            elem1 = self.pop()
+            elem2 = int(self.pop())
+            elem1 = int(self.pop())
 
             self.push(elem1 | elem2)
 
@@ -814,7 +830,7 @@ class Golfish():
 
 
     def push(self, elem):
-        self._curr_stack.append(elem)
+        self._curr_stack.append(sympify(elem))
 
 
     def pop(self):
@@ -829,11 +845,8 @@ class Golfish():
         self._curr_stack.rotate_right()
 
 
-    def char(self, num=True):
-        if num:
-            return self._board[self._pos]
-        else:
-            return self.chr(self._board[self._pos])
+    def char(self):
+        return self._board[self._pos]
 
 
     def chr(self, elem):
@@ -853,7 +866,7 @@ class Golfish():
         start_pos = self._pos[:]
         self.move()
 
-        if self.char(num=False) in "FWQ":
+        if self.chr(self.char()) in "FWQ":
             self.move()
         
         string_parse = False
@@ -861,9 +874,9 @@ class Golfish():
         switched = False
         depth = 0
 
-        while depth or string_parse or escape or switched or self.char(num=False) != '|':
+        while depth or string_parse or escape or switched or self.chr(self.char()) != '|':
             # Need to check VA for everything here
-            c = self.char(num=False)
+            c = self.chr(self.char())
             
             if switched:
                 switched = False

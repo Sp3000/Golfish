@@ -46,5 +46,8 @@ class TestGolfishCore(TestGolfish):
     def test_QL(self):
         self.run_test("5F1QL||D;", "[0 1 2 3 4]\n")
 
+    def test_negative_string_push(self):
+        self.run_test("m60p'0 0'D;", "[48 -1 48]\n")
+
 if __name__ == '__main__':
     unittest.main()
