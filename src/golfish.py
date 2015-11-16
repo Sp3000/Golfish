@@ -820,11 +820,14 @@ class Golfish():
             places = int(self.pop())
             num = self.pop()
 
-            try:
-                new_places = int(lib.floor(lib.log(num, 10)) + places + 1)
-                self.output(str(evalf.N(num, new_places, maxn=max(100, 5*new_places))))
-            except NameError:
-                self.output("{{:.{}f}}".format(places).format(float(num)))
+            if places <= 0:
+                self.output(str(int((num / 10**-places) + .5) * 10**-places))
+            else:
+                try:
+                    new_places = int(lib.floor(lib.log(num, 10)) + places + 1)
+                    self.output(str(evalf.N(num, new_places, maxn=max(100, 5*new_places))))
+                except NameError:
+                    self.output("{{:.{}f}}".format(places).format(float(num)))
 
         elif instruction == 'u':
             elem = self.chr(self.pop())
