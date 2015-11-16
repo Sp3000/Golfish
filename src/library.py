@@ -1,58 +1,88 @@
 import math
 import random
 
-def is_probably_prime(n):
-    if not isinstance(n, int):
-        return False
+try:
+    import sympy
+except ImportError:
+    pass
 
-    try:
-        # If you have sympy installed, use that instead
-        from sympy.ntheory import isprime
-        return isprime(n)
+class Library():
+    def __init__(self):
+        try:
+            self.CONSTANTS = {'0': sympy.pi/180,
+                              '1': sympy.GoldenRatio,
+                              '2': sympy.E,
+                              '3': sympy.pi}
 
-    except ImportError:
-        if n < 2:
-            return False
+        except NameError:
+            self.CONSTANTS = {'0': math.pi/180,
+                              '1': (1 + 5**.5)/2,
+                              '2': math.e,
+                              '3': math.pi}
 
-        if n in [2, 3]:
-            return True
+        try:
+            self.gcd = __import__("fractions").gcd
+        except AttributeError:
+            pass
 
-        # Miller Rabin
-        s = 0
-        d = n-1
+    def __getattr__(self, name):
+        try:
+            return getattr(sympy, name)
+        except (AttributeError, NameError):
+            try:
+                return getattr(math, name)
+            except AttributeError:
+                return self.__getattribute__(name)
 
-        while d%2 == 0:
-            d //= 2
-            s += 1
+    def is_probably_prime(self, n):
+        n = int(n)
 
-        k = 10 + math.log(n)//math.log(4)
-        witness_count = 0
+        try:
+            # If you have sympy installed, use that instead
+            from sympy.ntheory import isprime
+            return isprime(n)
 
-        while witness_count < k:
-            continue_ = False
-            a = random.randint(2, n-2)
-            x = pow(a, d, n)
-
-            if x == 1 or x == n-1:
-                witness_count += 1
-                continue
-
-            for _ in range(s-1):
-                x = pow(x, 2, n)
-
-                if x == 1:
-                    return False
-
-                if x == n-1:
-                    continue_ = True
-                    break
-
-            if not continue_:
+        except ImportError:
+            if n < 2:
                 return False
 
-            witness_count += 1
+            if n in [2, 3]:
+                return True
 
-        return True
+            # Miller Rabin
+            s = 0
+            d = n-1
 
-    
+            while d%2 == 0:
+                d //= 2
+                s += 1
+
+            k = 10 + math.log(n)//math.log(4)
+            witness_count = 0
+
+            while witness_count < k:
+                continue_ = False
+                a = random.randint(2, n-2)
+                x = pow(a, d, n)
+
+                if x == 1 or x == n-1:
+                    witness_count += 1
+                    continue
+
+                for _ in range(s-1):
+                    x = pow(x, 2, n)
+
+                    if x == 1:
+                        return False
+
+                    if x == n-1:
+                        continue_ = True
+                        break
+
+                if not continue_:
+                    return False
+
+                witness_count += 1
+
+            return True
             

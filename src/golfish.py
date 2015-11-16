@@ -25,14 +25,6 @@ except ImportError:
     from .library import *
     from .structures import *
 
-try:
-    # Python 3.5 onwards
-    from math import gcd
-
-except ImportError:
-    from fractions import gcd
-
-
 DIGITS = "0123456789abcdef"
 
 DIRECTIONS = {'^': [0, -1],
@@ -45,10 +37,12 @@ MIRRORS = {'/': lambda x,y: [-y, -x],
            '#': lambda x,y: [-x, -y]}
 
 EOF = -1
-
+lib = Library()
 
 class Golfish():
-    def __init__(self, code="", input_=None, debug=False, online=False, tick_limit=None):
+    def __init__(self, code="", input_=None, debug=False, symbolic=False,
+                 online=False, tick_limit=None):
+
         self._board = CodeBoard(code)
 
         self._pos = [-1, 0] # [x, y]
@@ -57,13 +51,12 @@ class Golfish():
         self._ticks = 0
         self._tick_limit = tick_limit
 
-        self._stack_tape = defaultdict(BottomlessStack)
-        self._curr_stack = self._stack_tape[0]
-        self._stack_num = 0
-        self._register_tape = defaultdict(lambda:None)
+        self._stack_tape = StackTape()
+        self._curr_stack = self._stack_tape.curr_stack()
 
         self._input = input_
         self._debug = debug
+        self._symbolic = symbolic
         self._online = online
         
         self._input_buffer = None
@@ -116,9 +109,10 @@ class Golfish():
             self.print_error("something smells fishy... ", end='')
 
             if char in range(32, 127):
-                self.print_error("(instruction {} '{}' at {},{})".format(char, "S"*self._toggled + chr(char), pos[0], pos[1]))
+                self.print_error("(instruction {} '{}' at {},{})".format(
+                                 char, "S"*self._toggled + chr(char), *self._pos))
             else:
-                self.print_error("(instruction {} at {},{})".format(char, pos[0], pos[1]))
+                self.print_error("(instruction {} at {},{})".format(char, *self._pos))
 
             self.traceback(e)
 
@@ -275,12 +269,7 @@ class Golfish():
             self.push(elem1 % elem2)
 
         elif instruction == '&':
-            if self._register_tape[self._stack_num] is None:
-                self._register_tape[self._stack_num] = self.pop()
-
-            else:
-                self.push(self._register_tape[self._stack_num])
-                self._register_tape[self._stack_num] = None
+            self._stack_tape.register()
 
         elif instruction == '(':
             elem2 = self.pop()
@@ -388,7 +377,12 @@ class Golfish():
             if self._last_output not in "\n\r":
                 self.output('\n')
 
-            self.output(str(self._curr_stack).replace(',', '') + '\n')
+            to_output = [int(n) if n == int(n) else float(n) for n in self._curr_stack]
+
+            if self._symbolic:
+                to_output = self._curr_stack
+
+            self.output(str(to_output).replace(',', '') + '\n')
 
         elif instruction == 'E':
             if self._eof:
@@ -555,21 +549,12 @@ class Golfish():
                 self._skip = 1
 
         elif instruction == '[':
-            buffer, self._stack_tape[self._stack_num] = self._curr_stack, []
-            self.stack_left()
-            self._curr_stack.extend(buffer)
+            n = self.pop()
+            self._curr_stack = self._stack_tape.move_left(n)
 
         elif instruction == ']':
             n = self.pop()
-            buffer = []
-
-            for _ in range(n):
-                buffer.append(self.pop())
-
-            self.stack_right()
-
-            while buffer:
-                self.push(buffer.pop())
+            self._curr_stack = self._stack_tape.move_right(n)
 
         elif instruction == '`':
             self.move()
@@ -643,7 +628,7 @@ class Golfish():
             self._dir = self._teleport_dir[:]
 
         elif instruction == 'u':
-            self.stack_right()
+            self._curr_stack = self._stack_tape.stack_right()
             
         elif instruction == 'w':
             self._marker_stack.append([self._pos[:], self._dir[:]])
@@ -652,7 +637,7 @@ class Golfish():
             self._dir = random.choice(list(DIRECTIONS.values()))
 
         elif instruction == 'y':
-            self.stack_left()
+            self._curr_stack = self._stack_tape.stack_left()
 
         elif instruction == 'z':
             elem = self.pop()
@@ -720,7 +705,7 @@ class Golfish():
             elem2 = self.pop()
             elem1 = self.pop()
 
-            self.push(gcd(elem1, elem2))
+            self.push(lib.gcd(elem1, elem2))
 
         elif instruction == '&':
             elem2 = self.pop()
@@ -730,11 +715,11 @@ class Golfish():
 
         elif instruction == '(':
             elem = self.pop()
-            self.push(math.floor(elem))
+            self.push(lib.floor(elem))
 
         elif instruction == ')':
             elem = self.pop()
-            self.push(math.ceil(elem))
+            self.push(lib.ceil(elem))
 
         elif instruction == ',':
             elem2 = self.pop()
@@ -742,14 +727,8 @@ class Golfish():
 
             self.push(int(elem1 // elem2))
 
-        elif instruction == '1':
-            self.push((1+5**.5)/2)
-
-        elif instruction == '2':
-            self.push(math.e)
-
-        elif instruction == '3':
-            self.push(math.pi)
+        elif instruction in "0123":
+            self.push(lib.CONSTANTS[instruction])
 
         elif instruction == '<':
             elem2 = self.pop()
@@ -784,33 +763,23 @@ class Golfish():
         elif instruction == 'L':
             elem2 = self.pop()
             elem1 = self.pop()
-            self.push(math.log(elem1, elem2))
+            self.push(lib.log(elem1, elem2))
 
         elif instruction == 'P':
             elem = self.pop()
-            self.push(1 if is_probably_prime(elem) else 0)
+            self.push(1 if lib.is_probably_prime(elem) else 0)
 
         elif instruction == 'T':
             func_num = self.pop()
-            functions = [math.sin, math.cos, math.tan, math.sinh, math.cosh, math.tanh,
-                         math.asin, math.acos, math.atan, math.asinh, math.acosh, math.atanh, math.atan2]
+            functions = [lib.sin, lib.cos, lib.tan, lib.sinh, lib.cosh, lib.tanh,
+                         lib.asin, lib.acos, lib.atan, lib.asinh, lib.acosh, lib.atanh, lib.atan2]
 
             elem = self.pop()
             self.push(functions[func_num % len(functions)](elem))
 
-        elif instruction == ']':
+        elif instruction == ']': 
             n = self.pop()
-            buffer = []
-
-            for _ in range(n):
-                buffer.append(self.pop())
-
-            self.stack_right()
-
-            while buffer:
-                elem = buffer.pop()
-                self.push(elem)
-                self._stack_tape[self._stack_num-1].append(elem)
+            self._curr_stack = self._stack_tape.move_right(n, copy=True)
 
         elif instruction == '^':
             elem2 = self.pop()
@@ -869,16 +838,6 @@ class Golfish():
 
     def chr(self, elem):
         return chr(int(elem))
-    
-
-    def stack_left(self):
-        self._stack_num -= 1
-        self._curr_stack = self._stack_tape[self._stack_num]
-
-
-    def stack_right(self):
-        self._stack_num += 1
-        self._curr_stack = self._stack_tape[self._stack_num]
 
 
     def bookmark_break(self):
@@ -992,6 +951,9 @@ class Golfish():
         else:
             if int(out) == out:
                 out = int(out)
+
+            else:
+                out = float(out)
                     
             self.output(str(out))
 
@@ -1018,19 +980,21 @@ class Golfish():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--debug', help="Debug mode (show interpreter errors)", action="store_true")
+    parser.add_argument('-s', '--symbolic', help="D outputs values symbolically", action="store_true")
     parser.add_argument("program_path", help="Path to file containing program",
                         type=str)
 
     args = parser.parse_args()
     filename = args.program_path
-    debug = args.debug    
+    debug = args.debug
+    symbolic = args.symbolic
 
     try:
         with open(filename) as infile:
-            interpreter = Golfish(infile.read(), debug=debug)
+            interpreter = Golfish(infile.read(), debug=debug, symbolic=symbolic)
 
     except UnicodeDecodeError:
         with codecs.open(filename, "r", "utf_8") as infile:
-            interpreter = Golfish(infile.read(), debug=debug)
+            interpreter = Golfish(infile.read(), debug=debug, symbolic=symbolic)
 
     interpreter.run()

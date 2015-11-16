@@ -46,6 +46,54 @@ class IfBookmark(Bookmark):
         super().__init__(pos, dir_, None)
 
 
+class CodeBoard():
+    def __init__(self, code=""):
+        self.board = defaultdict(lambda: defaultdict(int))
+
+        rows = code.split('\n')
+        x = y = 0
+
+        for char in code:
+            if char == '\n':
+                y += 1
+                x = 0
+
+            else:
+                self.board[y][x] = ord(char)
+                x += 1
+
+
+    def has_y(self, y):
+        return y in self.board
+
+
+    def max_y(self):
+        return max(self.board.keys())
+
+
+    def max_x(self, y):
+        return max(self.board[y].keys())
+
+
+    def __contains__(self, pos):
+        return pos[1] in self.board and pos[0] in self.board[pos[1]]
+
+
+    def __getitem__(self, pos):
+        if pos[1] in self.board and pos[0] in self.board[pos[1]]:
+            return self.board[pos[1]][pos[0]]
+
+        return 0
+
+
+    def __setitem__(self, pos, elem):
+        self.board[pos[1]][pos[0]] = elem
+
+
+    def __repr__(self):
+        return repr(self.board)
+
+
 class BottomlessStack():
     def __init__(self, stack=None):
         self.stack = stack or []
@@ -99,53 +147,65 @@ class BottomlessStack():
         return repr(self.stack)
 
 
-class CodeBoard():
-    def __init__(self, code=""):
-        self.board = defaultdict(lambda: defaultdict(int))
-
-        rows = code.split('\n')
-        x = y = 0
-
-        for char in code:
-            if char == '\n':
-                y += 1
-                x = 0
-
-            else:
-                self.board[y][x] = ord(char)
-                x += 1
+class StackTape():
+    def __init__(self):
+        self.stacks = defaultdict(BottomlessStack)
+        self.registers = defaultdict(lambda:None)
+        self.stack_num = 0
 
 
-    def has_y(self, y):
-        return y in self.board
+    def curr_stack(self):
+        return self.stacks[self.stack_num]
 
 
-    def max_y(self):
-        return max(self.board.keys())
+    def register(self):
+        stack = self.curr_stack()
+
+        if self.registers[self.stack_num] is None:
+            self.registers[self.stack_num] = stack.pop()
+
+        else:
+            stack.append(self.registers[self.stack_num])
+            self.registers[self.stack_num] = None
 
 
-    def max_x(self, y):
-        return max(self.board[y].keys())
+    def jump_to_stack(self, stack_num):
+        self.stack_num = stack_num
+        return self.curr_stack()
 
 
-    def __contains__(self, pos):
-        return pos[1] in self.board and pos[0] in self.board[pos[1]]
+    def stack_left(self):
+        return self.jump_to_stack(self.stack_num - 1)
 
 
-    def __getitem__(self, pos):
-        if pos[1] in self.board and pos[0] in self.board[pos[1]]:
-            return self.board[pos[1]][pos[0]]
-
-        return 0
+    def stack_right(self):
+        return self.jump_to_stack(self.stack_num + 1)
 
 
-    def __setitem__(self, pos, elem):
-        self.board[pos[1]][pos[0]] = elem
+    def _stack_move(self, num_elems, stack_num, copy=False):
+        stack = self.curr_stack()
+        buffer = []
+
+        for _ in range(num_elems):
+            buffer.append(stack.pop())
+
+        if copy:
+            for elem in buffer[::-1]:
+                stack.append(elem)
+
+        self.jump_to_stack(stack_num)
+        stack = self.curr_stack()
+
+        while buffer:
+            stack.append(buffer.pop())
+
+        return self.curr_stack()
 
 
-    def __repr__(self):
-        return repr(self.board)
+    def move_left(self, num_elems, copy=False):
+        return self._stack_move(num_elems, self.stack_num - 1, copy)
 
 
-
+    def move_right(self, num_elems, copy=False):
+        return self._stack_move(num_elems, self.stack_num + 1, copy)
     

@@ -3,10 +3,12 @@ import sys
 import unittest
 
 from golfish import Golfish
+from library import *
 
 class TestGolfish(unittest.TestCase):
     def setUp(self):
         sys.stdout = io.StringIO()
+        self.lib = Library()
 
     def run_test(self, prog, output):
         if isinstance(prog, str):

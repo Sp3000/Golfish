@@ -6,7 +6,6 @@ from textwrap import dedent
 import unittest
 
 from golfish import Golfish
-from library import *
 from unittests_base import TestGolfish
 
 class TestGolfishExamples(TestGolfish):
@@ -167,14 +166,14 @@ class TestGolfishExamples(TestGolfish):
 
     def test_prime(self):
         for i in range(30):
-            expected = int(is_probably_prime(i))
+            expected = int(self.lib.is_probably_prime(i))
             self.run_test(("I:2(q0h:3RF:L%zq0h|1h", i), expected)
             self.run_test(("1IRl:&MR*:*&%h", i), expected)
 
     def test_biplex(self):
         code = dedent("""\
                       IEvW2SD$|~rlFLmg+Lmp|
-                      |h>3F`dFLmg|u|ylRS>[&lF:q}C~|lMRS<&[jjlF2k=&=&S|}|lMF2*+""")
+                      |h>3F`dFLmg|u|ylRS>l[&lF:q}C~|lMRS<&l[jjlF2k=&=&S|}|lMF2*+""")
 
         for a, b in [[[1], 1], [[2], 2], [[1, 2, 5], 7], [[4294967295], 4294967295],
                      [[2454267026, 2863311530, 3681400539], 3817748707],

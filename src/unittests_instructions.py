@@ -196,7 +196,7 @@ class TestGolfishInstructions(TestGolfish):
         self.run_test("11Zh~h", "0")
 
     def test_square_brackets(self):
-        self.run_test("12345D 3]D ++[D;", "[1 2 3 4 5]\n[3 4 5]\n[1 2 12]\n")
+        self.run_test("12345D 3]D ++l[D;", "[1 2 3 4 5]\n[3 4 5]\n[1 2 12]\n")
 
     def test_backtick(self):
         self.run_test("`'``a`a`b`HH", "Hba\n`'")
