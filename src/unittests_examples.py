@@ -198,5 +198,17 @@ class TestGolfishExamples(TestGolfish):
         code = "22WiEB:a=Q{~~2$PC|3K~p{P}|~~22W2Kg:QoPC|ao~~P22KgZ;|;"
         self.run_test((code, "abc\ndef\nghi\n"), "adg\nbeh\ncfi\n")
 
+    def test_fibo_nacci(self):
+        o = ""
+        a, b = 0, 1
+
+        for _ in range(100):
+            o += "Fibo"*(b%2<1) + "Nacci"*(b%3<1) or str(b)
+            o += '\n'
+
+            a, b = b, a+b
+
+        self.run_test('10`dF:@+01k2%zQS"Fibo"P|1k3%zQS"Nacci"P|QaoC|:N|;', o)
+
 if __name__ == '__main__':
     unittest.main()

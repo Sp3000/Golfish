@@ -71,6 +71,7 @@ class Golfish():
         self._last_output = '\n'
 
         self._toggled = False # S
+        self._library = None
         self._skip = 0 # ?! and more
 
         self._teleport_pos = [-1, 0] # tT
@@ -115,12 +116,7 @@ class Golfish():
                 self.print_error('\n', end='')
 
             self.print_error("something smells fishy... ", end='')
-
-            instruction = 'S'*self._toggled
-            prev_char = self.chr(self._board[self.pos_before()])
-
-            instruction += prev_char * (prev_char in "T")
-            instruction += self.chr(char)
+            instruction = 'S'*self._toggled + (self._library or '') + self.chr(char)
 
             if char in range(32, 127):
                 self.print_error("(instruction {} '{}' at {},{})".format(char, instruction, *self._pos))
@@ -169,6 +165,10 @@ class Golfish():
     def handle_instruction(self, char):
         instruction = self.chr(char)
 
+        if self._toggled and self._library is None and instruction in 'T':
+            self._library = instruction
+            return
+
         if instruction == 'S' and not self._toggled:
             self._toggled = True
             return
@@ -176,6 +176,7 @@ class Golfish():
         if self._skip > 0:
             self._skip -= 1
             self._toggled = False
+            self._library = None
             return
 
         elif self._skip < 0:
@@ -183,8 +184,16 @@ class Golfish():
 
         tmp_R_repeat, self._R_repeat = int(self._R_repeat), 1
         tmp_pos = self._pos[:]
+
+        if self._library:
+            for _ in range(tmp_R_repeat):
+                self._pos = tmp_pos[:]
+                self.handle_library_instruction(instruction)
+
+            self._library = None
+            self._toggled = False
         
-        if self._toggled:
+        elif self._toggled:
             for _ in range(tmp_R_repeat):
                 self._pos = tmp_pos[:]
                 self.handle_switched_instruction(instruction)
@@ -779,28 +788,7 @@ class Golfish():
             self.push(1 if lib.is_probably_prime(elem) else 0)
 
         elif instruction == 'T':
-            self.move()
-            char = self.chr(self.char())
-
-            if char in '2h':
-                elem2 = self.pop()
-                elem1 = self.pop()
-
-                funcs = {'2': lib.atan2,
-                         'h': lambda x,y: lib.sqrt(x*x + y*y) }
-
-                self.push(funcs[char](elem1, elem2))
-
-            else:
-                funcs = {'S': lib.asin,
-                         'C': lib.acos,
-                         'T': lib.atan,
-                         's': lib.sin,
-                         'c': lib.cos,
-                         't': lib.tan}
-
-                elem = self.pop()
-                self.push(funcs[char](elem))
+            raise InvalidStateException # Shouldn't reach here
 
         elif instruction == ']': 
             n = self.pop()
@@ -844,6 +832,29 @@ class Golfish():
 
         else:
             raise NotImplementedError
+
+    def handle_library_instruction(self, instruction):
+        if self._library == 'T':
+            # Trigonometry
+            if instruction in '2h':
+                elem2 = self.pop()
+                elem1 = self.pop()
+
+                funcs = {'2': lib.atan2,
+                         'h': lambda x,y: lib.sqrt(x*x + y*y) }
+
+                self.push(funcs[instruction](elem1, elem2))
+
+            else:
+                funcs = {'S': lib.asin,
+                         'C': lib.acos,
+                         'T': lib.atan,
+                         's': lib.sin,
+                         'c': lib.cos,
+                         't': lib.tan}
+
+                elem = self.pop()
+                self.push(funcs[instruction](elem))
 
 
     def push(self, elem):

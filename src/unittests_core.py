@@ -1,4 +1,5 @@
 import io
+import math
 import sys
 from textwrap import dedent
 import unittest
@@ -48,6 +49,12 @@ class TestGolfishCore(TestGolfish):
 
     def test_negative_string_push(self):
         self.run_test("m60p'0 0'D;", "[48 -1 48]\n")
+
+    def test_library_skip(self):
+        self.run_test("1!STCh", "1")
+
+    def test_R_library(self):
+        self.run_test("12RSTch", str(math.cos(math.cos(1))))
 
 if __name__ == '__main__':
     unittest.main()
