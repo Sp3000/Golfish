@@ -30,7 +30,7 @@ try:
     from sympy import sympify, evalf
 
 except ImportError:
-    # Otherwise, make custom versions
+    # Otherwise, make sympify a no-op
     sympify = lambda x: x
 
 DIGITS = "0123456789abcdef"
@@ -399,12 +399,20 @@ class Golfish():
             if self._last_output not in "\n\r":
                 self.output('\n')
 
-            to_output = [int(n) if n == int(n) else float(n) for n in self._curr_stack]
-
             if self._symbolic:
                 to_output = self._curr_stack
+                self.output(str(to_output).replace(',', '') + '\n')
 
-            self.output(str(to_output).replace(',', '') + '\n')
+            else:
+                self.output('[')
+
+                for i, elem in enumerate(self._curr_stack):
+                    self.output_as_num(elem)
+
+                    if i != len(self._curr_stack) - 1:
+                        self.output(' ')
+
+                self.output(']')
 
         elif instruction == 'E':
             if self._eof:
@@ -858,20 +866,7 @@ class Golfish():
 
 
     def push(self, elem):
-        elem = sympify(elem)
-
-        valid = not isinstance(elem, complex)
-
-        try:
-            if elem.is_imaginary:
-                valid = False
-        except:
-            pass
-
-        if not valid:
-            raise InvalidStateException("Computation resulted in a complex number")
-            
-        self._curr_stack.append(elem)
+        self._curr_stack.append(sympify(elem))
 
 
     def pop(self):
@@ -990,27 +985,25 @@ class Golfish():
             
 
     def output_as_char(self, out):
-        if isinstance(out, list):
-            for elem in out:
-                self.output_as_char(elem)
-
-        else:
-            self.output(self.chr(out))
+        self.output(self.chr(out))
 
 
     def output_as_num(self, out):
-        if isinstance(out, list):
-            for elem in out:
-                self.output_as_num(elem)
-
-        else:
+        try:             
             if int(out) == out:
-                out = int(out)
-
+                out = str(int(out))
             else:
-                out = float(out)
-                    
-            self.output(str(out))
+                out = str(float(out))
+
+        except TypeError:
+            out = str(complex(out)).translate({ord('('): None,
+                                               ord(')'): None,
+                                               ord('j'): 'i'})
+
+            if out == "1i" or "-1i" in out or "+1i" in out:
+                out = out.replace("1i", "i")
+
+        self.output(out)
 
 
     def halt(self):
