@@ -56,5 +56,21 @@ class TestGolfishCore(TestGolfish):
     def test_R_library(self):
         self.run_test("12RSTch", str(math.cos(math.cos(1))))
 
+    def test_complex_output(self):
+        self.run_test("Si 1X h", "i")
+        self.run_test("Si 2X h", "-1")
+        self.run_test("Si 3X h", "-i")
+        self.run_test("Si 4X h", "1")
+
+        self.run_test("Si 1X P h", "1+i")
+        self.run_test("Si 3X P h", "1-i")
+        self.run_test("Si 1X M h", "-1+i")
+        self.run_test("Si 3X M h", "-1-i")
+
+        self.run_test("Si 2* 3+ h", "3+2i")
+        self.run_test("Si 2* 3- h", "-3+2i")
+        self.run_test("3 Si 2* - h", "3-2i")
+        self.run_test("3- Si 2* - h", "-3-2i")
+
 if __name__ == '__main__':
     unittest.main()

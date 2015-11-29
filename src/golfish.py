@@ -412,7 +412,7 @@ class Golfish():
                     if i != len(self._curr_stack) - 1:
                         self.output(' ')
 
-                self.output(']')
+                self.output(']\n')
 
         elif instruction == 'E':
             if self._eof:
@@ -996,19 +996,34 @@ class Golfish():
     def output_as_num(self, out):
         try:             
             if int(out) == out:
-                out = str(int(out))
+                out = int(out)
             else:
-                out = str(float(out))
+                out = float(out)
+
+            self.output(str(out))
 
         except TypeError:
-            out = str(complex(out)).translate({ord('('): None,
-                                               ord(')'): None,
-                                               ord('j'): 'i'})
+            out = complex(out)
 
-            if out == "1i" or "-1i" in out or "+1i" in out:
-                out = out.replace("1i", "i")
+            if out.imag == 0:
+                self.output_as_num(out.real)
 
-        self.output(out)
+            else:
+                if out.real != 0:
+                    self.output_as_num(out.real)
+
+                    if out.imag >= 0:
+                        self.output('+')
+
+                if out.imag == 1:
+                    self.output('i')
+                    
+                elif out.imag == -1:
+                    self.output('-i')
+                    
+                else:
+                    self.output_as_num(out.imag)
+                    self.output('i')
 
 
     def halt(self):
