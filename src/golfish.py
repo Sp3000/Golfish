@@ -753,7 +753,7 @@ class Golfish():
 
             self.push(int(elem1 // elem2))
 
-        elif instruction in "0123":
+        elif instruction in "123":
             self.push(lib.CONSTANTS[instruction])
 
         elif instruction == '<':
@@ -808,6 +808,9 @@ class Golfish():
 
             self.push(elem1 ^ elem2)
 
+        elif instruction == 'i':
+            self.push(1j)
+
         elif instruction == 'l':
             elem = self.chr(self.pop())
             self.push(ord(elem.lower()))
@@ -859,7 +862,9 @@ class Golfish():
                          'T': lib.atan,
                          's': lib.sin,
                          'c': lib.cos,
-                         't': lib.tan}
+                         't': lib.tan,
+                         'd': lib.degrees,
+                         'r': lib.radians}
 
                 elem = self.pop()
                 self.push(funcs[instruction](elem))

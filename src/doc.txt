@@ -23,7 +23,6 @@ S,    like ,          Integer division
 .                     Pop y, x and jump to (x, y)
 /                     Mirror
 0-9                   Push 0-9 respectively
-S0                    Push degree = pi/180 = 0.0174533
 S1                    Push phi = 1.61803
 S2    2.718           Push e = 2.71828
 S3    3.14            Push pi = 3.14159
@@ -66,6 +65,7 @@ ST    trig            Three-char operator trig library:
                         STS/STC/STT/ST2:  asin/acos/atan/atan2
                         STs/STc/STt:      sin/cos/tan
                         STh:              hypot
+                        STd/STr:          to_degrees/to_radians
 U                      
 V     var             Pops element and re-pushes it. Saves element to variable with name determined by next char (don't pick L).
 W     while           While loop. Peeks at top for falsy value. Saves pos/dir. Moves to after matching | on same row on completion. Modifiable with w instruction.
@@ -89,6 +89,7 @@ f     f-hex           Push 15
 g     get             Pop y, x and push char at (x, y)
 h     halt-num        Halt and output top of stack as num
 i     input-char      Read char, pushes -1 on EOF
+Si                    Pushes i = sqrt(-1)
 j     clojure         Pop x and push x to a "closure stack" to be pushed every iteration for the next function/loop.
 k     kopy-nth        Get nth element down (top is 0). Indices wrap.
 l     length          Push length of stack
