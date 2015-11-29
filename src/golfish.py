@@ -863,8 +863,8 @@ class Golfish():
                          's': lib.sin,
                          'c': lib.cos,
                          't': lib.tan,
-                         'd': lib.degrees,
-                         'r': lib.radians}
+                         'd': lib.to_degrees,
+                         'r': lib.to_radians}
 
                 elem = self.pop()
                 self.push(funcs[instruction](elem))

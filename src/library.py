@@ -9,7 +9,7 @@ except ImportError:
 class Library():
     def __init__(self):
         try:
-            self.CONSTANTS = {'0': sympy.pi / 180,
+            self.CONSTANTS = {'deg': sympy.pi/180,
                               '1': sympy.GoldenRatio,
                               '2': sympy.E,
                               '3': sympy.pi}
@@ -17,7 +17,7 @@ class Library():
             self.is_probably_prime = sympy.ntheory.isprime
 
         except NameError:
-            self.CONSTANTS = {'0': math.pi/180,
+            self.CONSTANTS = {'deg': math.pi/180,
                               '1': (1 + 5**.5)/2,
                               '2': math.e,
                               '3': math.pi}
@@ -83,4 +83,10 @@ class Library():
             witness_count += 1
 
         return True
+
+    def to_degrees(self, elem):
+        return elem / self.CONSTANTS['deg']
+
+    def to_radians(self, elem):
+        return elem * self.CONSTANTS['deg']
             
